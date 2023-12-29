@@ -31,6 +31,7 @@ Item -> Factor '=' Exp
       | Extends
 
 Statemets -> 'let' '{' Item+ '}' 'in' Exp
+           | Exp 'where' '{' Item+ '}'
            | 'while' '(' Exp ')' '{' Item+ '}'
            | 'if' '(' Exp ')' '{' Item+ '}'
            | 'if' '(' Exp ')' '{' Item+ '}' 'else' '{' Item+ '}'
