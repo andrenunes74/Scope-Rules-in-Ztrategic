@@ -1,0 +1,52 @@
+===========================Gramática===========================
+Exp    ->  Termo '+' Exp
+        |  Termo '-' Exp
+        |  Termo '<' Exp
+        |  Termo '>' Exp
+        |  Termo '>=' Exp
+        |  Termo '<=' Exp
+        |  Termo '&&' Exp
+        |  Termo '||' Exp
+        |  Termo '==' Exp
+        |  Termo '++'
+        |  Termo '--' 
+        |  '!' Exp
+        |  Termo
+
+Termo  ->  Factor '*' Termo
+        |  Factor '/' Termo
+        |  Factor
+
+Factor ->  int
+        |  var
+        |  '(' Exp ')'
+
+Item -> Factor '=' Exp
+      | Exp
+      | Statemets
+      | Funcao
+      | Type
+      | Class
+      | Interface
+      | Extends
+
+Statemets -> 'let' '{' Item+ '}' 'in' Exp
+           | 'while' '(' Exp ')' '{' Item+ '}'
+           | 'if' '(' Exp ')' '{' Item+ '}'
+           | 'if' '(' Exp ')' '{' Item+ '}' 'else' '{' Item+ '}'
+           | var '=' Exp
+
+Funcao -> 'func' String '(' Factor ')'
+        | 'func' String '()'
+        | 'def' String '(' Factor ')' '{' Statemets '}'
+        | 'def' String '()' '{' Statemets '}'
+
+Type -> 'Type' String String
+
+Class -> 'Class' String String
+       | 'Class' String String '{' Item+ '}'
+
+Interface -> 'Interface' String String '{' Funcao+ '}'
+
+Extends -> Class 'Extends' Class
+===============================================================
