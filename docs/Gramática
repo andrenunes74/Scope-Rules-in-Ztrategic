@@ -90,13 +90,16 @@ Class Vehicle {
 }
 
 Class Car Extends Vehicle {
-  String modelName = "Mustang";
+
   def main() {
-
     Car myCar;
-    myCar.honk();
 
-    print(myCar.brand + " " + myCar.modelName);
+    let {a = myCar} in a.honk();
+
+    print(brand + " " + modelName) where{
+      brand = a.brand;
+      modelName = "Mustang";
+    }
   }
 }
 """
