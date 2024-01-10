@@ -8,8 +8,6 @@ Exp    ->  Termo '+' Exp
         |  Termo '&&' Exp
         |  Termo '||' Exp
         |  Termo '==' Exp
-        |  Termo '++'
-        |  Termo '--' 
         |  '!' Exp
         |  Termo
 
@@ -30,24 +28,75 @@ Item -> Factor '=' Exp
       | Interface
       | Extends
 
-Statemets -> 'let' '{' Item+ '}' 'in' Exp
-           | Exp 'where' '{' Item+ '}'
-           | 'while' '(' Exp ')' '{' Item+ '}'
-           | 'if' '(' Exp ')' '{' Item+ '}'
-           | 'if' '(' Exp ')' '{' Item+ '}' 'else' '{' Item+ '}'
+Statemets -> 'let' '{' Item '}' 'in' Exp
+           | Exp 'where' '{' Item '}'
+           | 'while' '(' Exp ')' '{' Item '}'
+           | 'if' '(' Exp ')' '{' Item '}'
+           | 'if' '(' Exp ')' '{' Item '}' 'else' '{' Item '}'
            | var '=' Exp
+           | Statemets ';' Statemets
 
 Funcao -> 'func' String '(' Factor ')'
         | 'func' String '()'
         | 'def' String '(' Factor ')' '{' Statemets '}'
         | 'def' String '()' '{' Statemets '}'
 
-Type -> 'Type' String String
+Class -> 'Class' String '{' Item+ '}'
+       | 'Class' String String
+       | String'.'Funcao
 
-Class -> 'Class' String String
-       | 'Class' String String '{' Item+ '}'
-
-Interface -> 'Interface' String String '{' Funcao+ '}'
+Interface -> 'Interface' String '{' Item+ '}'
+           | Class 'Implements' String '{' Item+ '}'
 
 Extends -> Class 'Extends' Class
-===============================================================
+         | Interface 'Extends' Interface
+
+===========================Exemplos de uso===========================
+"""
+Interface Language {
+  def getName(String name);
+}
+
+Interface Lingua Extends Language {
+  def getNome(String name);
+}
+
+Class ProgrammingLanguage Implements Lingua {
+
+  func getName(String name) {
+    print("Programming Language: " + name);
+  }
+
+  func getNome(String name) {
+    print("Linguagem de Programação: " + name);
+  }
+}
+
+Class Main {
+  def main() {
+     Class ProgrammingLanguage language;
+     language.getName("Java");
+     language.getNome("Haskell");
+  }
+}
+"""
+
+"""
+Class Vehicle {
+  String brand = "Ford";
+  def honk() {              
+    print("Tuut, tuut!");
+  }
+}
+
+Class Car Extends Vehicle {
+  String modelName = "Mustang";
+  def main() {
+
+    Car myCar;
+    myCar.honk();
+
+    print(myCar.brand + " " + myCar.modelName);
+  }
+}
+"""
