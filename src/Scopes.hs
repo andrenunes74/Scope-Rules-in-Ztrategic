@@ -11,8 +11,13 @@ import Library.ZipperAG
 import Data.Maybe
 import Debug.Trace
 
-treeT1 = OpenFuncao $ DefFuncao (Name "main") (NilIts)
-                    $ (ConsIts (Decl "a" (Const 100))) (ConsIts (Decl "x" (Add (Var "a") (Var "b"))) NilIts)
+treeT1 = OpenFuncao (DefFuncao (Name "main") NilIts
+            (ConsIts (Decl "a" (Const 100))
+            (ConsIts (Decl "x" (Add (Var "a") (Var "b"))) NilIts)))
+
+treeT2 = OpenFuncao (DefFuncao (Name "main") NilIts
+            (ConsIts (Decl "a" (Const 100))
+            (ConsIts (Decl "x" (Var "a")) NilIts)))
 
 type Env    = [(String, Int)]
 type Errors = [String]
@@ -379,8 +384,10 @@ lexeme a =  case (getHole a :: Maybe Exp) of
 dclo :: Typeable a => Zipper a -> Env
 dclo t =   case constructor t of
             CDecl -> (lexeme t,lev t) : (dcli t)
+            CVar -> (lexeme t,lev t) : (dcli t)
             CFuncao -> (lexeme t,lev t) : (dcli t)
-            CDefFuncao -> (lexeme t,lev t) : (dcli t)
+            CDefFuncao -> [(lexeme t,lev t)] ++ dclo (t.$2) ++ dclo (t.$3) ++ (dcli t)
+            COpenFuncao -> dclo (t.$1)
             CName -> (lexeme t,lev t) : (dcli t)
             CLet -> dclo (t.$1)
             CIf -> dclo (t.$2)
@@ -437,55 +444,56 @@ env t = case constructor t of
                     otherwise -> dclo t
 
 mustBeIn :: String -> Env -> Errors
-mustBeIn name [] = [name]
+mustBeIn name [] = trace (name) $ [name]
 mustBeIn name ((n,i):es) = if (n==name) then [] else mustBeIn name es
 
 
 mustNotBeIn :: (String, Int) -> Env -> Errors
-mustNotBeIn t [] = []
+mustNotBeIn (a,b) [] = []
 mustNotBeIn (n1, l1) ((n2, l2):es) = if (n1 == n2) && (l1 == l2)
                                         then [n1] else mustNotBeIn (n1, l1) es
 
 
 scopes :: Typeable a => Zipper a -> Errors
 scopes ag = case (constructor ag) of
-            CAdd -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CSub -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CDiv -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CMul -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CLess -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CGreater -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CEquals -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CGTE -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CLTE -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CAnd -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            COr -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CNot -> mustBeIn (lexeme ag) (env ag)
-            CConst -> []
-            CVar -> mustBeIn (lexeme (ag)) (env ag)
-            CInc -> mustBeIn (lexeme (ag.$1)) (env ag)
-            CDec -> mustBeIn (lexeme (ag.$1)) (env ag)
-            CReturn -> mustBeIn (lexeme ag) (env ag)
-            CBool -> []
-            CDecl -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2))
-            CArg -> mustNotBeIn (lexeme ag, lev ag) (dcli ag) 
-            CIncrement -> mustBeIn (lexeme ag) (env ag)
-            CDecrement -> mustBeIn (lexeme ag) (env ag)
-            CNestedIf -> scopes (ag.$1)
-            CNestedWhile -> scopes (ag.$1)
-            CNestedLet -> scopes (ag.$1)
-            CNestedFuncao -> scopes (ag.$1)
-            CNestedReturn -> scopes (ag.$1)
-            CLet -> mustBeIn (lexeme ag) (env (ag.$1) ++ dcli ag)
-            CFuncao -> mustBeIn (lexeme (ag.$1)) (dcli ag) ++ (scopes (ag.$2))
-            CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
-            CName -> []
-            CIf -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CElse -> (scopes (ag.$1)) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
-            CWhile -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            COpenFuncao -> scopes (ag.$1)
-            COpenIf -> scopes (ag.$1)
-            COpenLet -> scopes (ag.$1)
-            COpenWhile -> scopes (ag.$1)
-            CConsIts -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-            CNilIts -> []
+    CAdd -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CSub -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CDiv -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CMul -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CLess -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CGreater -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CEquals -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CGTE -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CLTE -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CAnd -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    COr -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CNot -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CConst -> []
+    CVar -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CInc -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag)
+    CDec -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag)
+    CReturn -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CBool -> []
+    CDecl -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2))
+    CArg -> mustNotBeIn (lexeme ag, lev ag) (dcli ag)
+    CIncrement -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CDecrement -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CNestedIf -> scopes (ag.$1)
+    CNestedWhile -> scopes (ag.$1)
+    CNestedLet -> scopes (ag.$1)
+    CNestedFuncao -> scopes (ag.$1)
+    CNestedReturn -> scopes (ag.$1)
+    CLet -> mustBeIn (lexeme ag) (env (ag.$1) ++ dcli ag)
+    CFuncao -> mustBeIn (lexeme (ag.$1)) (dcli ag) ++ (scopes (ag.$2))
+    CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
+    CName -> []
+    CIf -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CElse -> (scopes (ag.$1)) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
+    CWhile -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    COpenFuncao -> scopes (ag.$1)
+    COpenIf -> scopes (ag.$1)
+    COpenLet -> scopes (ag.$1)
+    COpenWhile -> scopes (ag.$1)
+    CConsIts -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CNilIts -> []
+
