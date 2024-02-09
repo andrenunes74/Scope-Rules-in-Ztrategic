@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
 module Scopes where
-import Tools
 import Core
 import Data.Data
 import Data.Generics.Zipper
@@ -10,15 +9,14 @@ import Library.Ztrategic
 import Data.Generics.Aliases
 import Library.ZipperAG
 import Data.Maybe
+import Debug.Trace
 
-treeT1 = OpenFuncao (DefFuncao (Name "main") [] [Decl "a" (Const 100), Decl "x" (Add (Var "a") (Var "b"))])
+treeT1 = OpenFuncao $ DefFuncao (Name "main") (NilIts)
+                    $ (ConsIts (Decl "a" (Const 100))) (ConsIts (Decl "x" (Add (Var "a") (Var "b"))) NilIts)
 
 type Env    = [(String, Int)]
 type Errors = [String]
 type AGTree a  = Zipper a -> a
-
-mkAG :: Data t => t -> Zipper t
-mkAG = toZipper
 
 data Constructor = CAdd
                  | CSub
@@ -58,11 +56,13 @@ data Constructor = CAdd
                  | CIf
                  | CElse
                  | CWhile
+                 | CConsIts
+                 | CNilIts
                  deriving Show
 
 
 constructor :: (Typeable a) => Zipper a -> Constructor
-constructor a = case (getHole a :: Maybe Exp) of
+constructor a =  case (getHole a :: Maybe Exp) of
     Just (Add _ _)        -> CAdd
     Just (Sub _ _)        -> CSub
     Just (Div _ _)        -> CDiv
@@ -107,11 +107,14 @@ constructor a = case (getHole a :: Maybe Exp) of
                         Just (Else _ _ _)          -> CElse
                         otherwise                 -> case (getHole a :: Maybe While) of
                             Just (While _ _)         -> CWhile
-                            otherwise                -> error "Naha, that production does not exist!"
+                            otherwise                 -> case (getHole a :: Maybe Items) of
+                                Just (ConsIts _ _)    -> CConsIts
+                                Just (NilIts)         -> CNilIts
+                                otherwise                -> error "Naa, that production does not exist!"
 
 
 lev :: (Typeable a) => Zipper a -> Int
-lev ag = case (constructor ag) of
+lev ag =  case (constructor ag) of
             CAdd -> lev (parent ag)
             CSub -> lev (parent ag)
             CDiv -> lev (parent ag)
@@ -150,10 +153,11 @@ lev ag = case (constructor ag) of
             COpenIf -> 0
             COpenLet -> 0
             COpenWhile -> 0
+            CConsIts -> lev (parent ag)
+            CNilIts -> 1 + lev (parent ag)
 
-
-dcli :: AGTree Env 
-dcli t = case constructor t of
+dcli :: Typeable a => Zipper a -> Env
+dcli t =  case constructor t of
             CAdd -> dcli (parent t)
             CSub -> dcli (parent t)
             CDiv -> dcli (parent t)
@@ -176,6 +180,8 @@ dcli t = case constructor t of
             CArg -> dcli (parent t)
             CIncrement -> dcli (parent t)
             CDecrement -> dcli (parent t)
+            CConsIts -> dcli (parent t)
+            CNilIts -> dcli (parent t)
             CNestedIf -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
@@ -208,7 +214,6 @@ dcli t = case constructor t of
                             COpenLet -> []
                             COpenWhile -> []
                             otherwise -> dclo (t.$<1)
-                            
             CNestedLet -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
@@ -354,9 +359,13 @@ dcli t = case constructor t of
                             COpenWhile -> []
                             otherwise -> dclo (t.$<1)
             CName -> dclo (t.$<1)
+            COpenFuncao -> []
+            COpenIf -> []
+            COpenLet -> []
+            COpenWhile -> []
 
 
-lexeme a = case (getHole a :: Maybe Exp) of
+lexeme a =  case (getHole a :: Maybe Exp) of
             Just (Var a)          -> a
             otherwise             -> case (getHole a :: Maybe Item) of
                 Just (Decl a _)         -> a
@@ -365,10 +374,10 @@ lexeme a = case (getHole a :: Maybe Exp) of
                     Just (DefFuncao (Name a) _ _)    -> a
                     otherwise                 -> case (getHole a :: Maybe Name) of
                         Just (Name a)            -> a
+                        otherwise                 -> error "Error in lexeme!"
 
-
-dclo :: AGTree Env
-dclo t =  case constructor t of
+dclo :: Typeable a => Zipper a -> Env
+dclo t =   case constructor t of
             CDecl -> (lexeme t,lev t) : (dcli t)
             CFuncao -> (lexeme t,lev t) : (dcli t)
             CDefFuncao -> (lexeme t,lev t) : (dcli t)
@@ -377,9 +386,106 @@ dclo t =  case constructor t of
             CIf -> dclo (t.$2)
             CElse -> dclo (t.$2) ++ dclo (t.$3)
             CWhile -> dclo (t.$2)
+            CConsIts -> dclo (t.$1) ++ (dclo (t.$2))
             otherwise -> dcli t
 
+env :: Typeable a => Zipper a -> Env
+env t = case constructor t of
+            CAdd -> env (parent t)
+            CSub -> env (parent t)
+            CDiv -> env (parent t)
+            CMul -> env (parent t)
+            CLess -> env (parent t)
+            CGreater -> env (parent t)
+            CEquals -> env (parent t)
+            CGTE -> env (parent t)
+            CLTE -> env (parent t)
+            CAnd -> env (parent t)
+            COr -> env (parent t)
+            CNot -> env (parent t)
+            CConst -> env (parent t)
+            CVar -> env (parent t)
+            CInc -> env (parent t)
+            CDec -> env (parent t)
+            CReturn -> env (parent t)
+            CBool -> env (parent t)
+            CDecl -> env (parent t)
+            CArg -> env (parent t)
+            CIncrement -> env (parent t)
+            CDecrement -> env (parent t)
+            COpenFuncao -> dclo t
+            COpenIf -> dclo t
+            COpenLet -> dclo t
+            COpenWhile -> dclo t
+            CConsIts -> env (parent t)
+            CNilIts -> env (parent t)
+            _ -> case (constructor $ parent t) of
+                    CLet    -> env (parent t)
+                    CDefFuncao    -> env (parent t)
+                    CIf -> env (parent t)
+                    CElse -> env (parent t)
+                    CWhile -> env (parent t)
+                    CNestedWhile -> env (parent t)
+                    CNestedIf -> env (parent t)
+                    CNestedFuncao -> env (parent t)
+                    CNestedLet -> env (parent t)
+                    CNestedReturn -> env (parent t)
+                    COpenFuncao -> env (parent t)
+                    COpenIf -> env (parent t)
+                    COpenLet -> env (parent t)
+                    COpenWhile -> env (parent t)
+                    otherwise -> dclo t
 
-env = undefined
-errors = undefined
-scopes = undefined
+mustBeIn :: String -> Env -> Errors
+mustBeIn name [] = [name]
+mustBeIn name ((n,i):es) = if (n==name) then [] else mustBeIn name es
+
+
+mustNotBeIn :: (String, Int) -> Env -> Errors
+mustNotBeIn t [] = []
+mustNotBeIn (n1, l1) ((n2, l2):es) = if (n1 == n2) && (l1 == l2)
+                                        then [n1] else mustNotBeIn (n1, l1) es
+
+
+scopes :: Typeable a => Zipper a -> Errors
+scopes ag = case (constructor ag) of
+            CAdd -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CSub -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CDiv -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CMul -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CLess -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CGreater -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CEquals -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CGTE -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CLTE -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CAnd -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            COr -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CNot -> mustBeIn (lexeme ag) (env ag)
+            CConst -> []
+            CVar -> mustBeIn (lexeme (ag)) (env ag)
+            CInc -> mustBeIn (lexeme (ag.$1)) (env ag)
+            CDec -> mustBeIn (lexeme (ag.$1)) (env ag)
+            CReturn -> mustBeIn (lexeme ag) (env ag)
+            CBool -> []
+            CDecl -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2))
+            CArg -> mustNotBeIn (lexeme ag, lev ag) (dcli ag) 
+            CIncrement -> mustBeIn (lexeme ag) (env ag)
+            CDecrement -> mustBeIn (lexeme ag) (env ag)
+            CNestedIf -> scopes (ag.$1)
+            CNestedWhile -> scopes (ag.$1)
+            CNestedLet -> scopes (ag.$1)
+            CNestedFuncao -> scopes (ag.$1)
+            CNestedReturn -> scopes (ag.$1)
+            CLet -> mustBeIn (lexeme ag) (env (ag.$1) ++ dcli ag)
+            CFuncao -> mustBeIn (lexeme (ag.$1)) (dcli ag) ++ (scopes (ag.$2))
+            CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
+            CName -> []
+            CIf -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CElse -> (scopes (ag.$1)) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
+            CWhile -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            COpenFuncao -> scopes (ag.$1)
+            COpenIf -> scopes (ag.$1)
+            COpenLet -> scopes (ag.$1)
+            COpenWhile -> scopes (ag.$1)
+            CConsIts -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+            CNilIts -> []

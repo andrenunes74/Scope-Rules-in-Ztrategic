@@ -43,7 +43,9 @@ data Item = Decl String Exp
           | NestedReturn Exp
           deriving (Show,Eq,Data)
 
-type Items = [Item] 
+data Items = ConsIts Item Items
+           | NilIts
+           deriving (Show, Data,Eq)
 
 {--------------------------------
 ************* Let ***************
@@ -54,14 +56,12 @@ data Let = Let Items Exp
 {--------------------------------
 ********** Functions ************
 ---------------------------------}
-data Funcao = Funcao Name Args
-            | DefFuncao Name Args Items
+data Funcao = Funcao Name Items
+            | DefFuncao Name Items Items
             deriving (Show,Eq,Data)
 
 data Name = Name String 
           deriving (Show,Eq,Data)
-
-type Args = [Item] 
 
 {--------------------------------
 ************** If ***************
