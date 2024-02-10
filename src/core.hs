@@ -67,7 +67,6 @@ data Name = Name String
 ************** If ***************
 ---------------------------------}
 data If = If Exp Items
-        | Else Exp Items Items
         deriving (Show,Eq,Data)
         
 {--------------------------------

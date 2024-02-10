@@ -26,6 +26,14 @@ treeT3 = OpenFuncao (DefFuncao (Name "count25") NilIts
                                     NilIts)))
             NilIts)))
 
+treeT4 = OpenFuncao (DefFuncao (Name "count25") NilIts
+            (ConsIts (Decl "counter" (Const 0))
+            (ConsIts (NestedIf (If ((Less (Var "counter") (Const 5)))
+                                    (ConsIts (NestedReturn (Return (Var "counter")))
+                                    NilIts)))
+            NilIts)))
+
+
 type Env    = [(String, Int)]
 type Errors = [String]
 type AGTree a  = Zipper a -> a
@@ -66,7 +74,6 @@ data Constructor = CAdd
                  | CDefFuncao
                  | CName
                  | CIf
-                 | CElse
                  | CWhile
                  | CConsIts
                  | CNilIts
@@ -115,7 +122,6 @@ constructor a = case (getHole a :: Maybe Exp) of
                     Just (Name _)            -> CName
                     otherwise              -> case (getHole a :: Maybe If) of
                         Just (If _ _)              -> CIf
-                        Just (Else _ _ _)          -> CElse
                         otherwise                 -> case (getHole a :: Maybe While) of
                             Just (While _ _)         -> CWhile
                             otherwise                 -> case (getHole a :: Maybe Items) of
@@ -130,7 +136,6 @@ lev ag = case (constructor ag) of
             CFuncao -> 1 + lev (parent ag)
             CDefFuncao -> 1 + lev (parent ag)
             CIf -> 1 + lev (parent ag)
-            CElse -> 1 + lev (parent ag)
             CWhile -> 1 + lev (parent ag)
             COpenFuncao -> 0
             COpenIf -> 0
@@ -169,7 +174,6 @@ dcli t = case constructor t of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
                             CIf -> env (parent t)
-                            CElse -> env (parent t)
                             CWhile -> env (parent t)
                             CNestedWhile -> env (parent t)
                             CNestedIf -> env (parent t)
@@ -180,12 +184,11 @@ dcli t = case constructor t of
                             COpenIf -> []
                             COpenLet -> []
                             COpenWhile -> []
-                            otherwise -> dclo (t.$<1)
+                            otherwise -> dcli (parent t)
             CNestedWhile -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
                             CIf -> env (parent t)
-                            CElse -> env (parent t)
                             CWhile -> env (parent t)
                             CNestedWhile -> env (parent t)
                             CNestedIf -> env (parent t)
@@ -201,7 +204,6 @@ dcli t = case constructor t of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
                             CIf -> env (parent t)
-                            CElse -> env (parent t)
                             CWhile -> env (parent t)
                             CNestedWhile -> env (parent t)
                             CNestedIf -> env (parent t)
@@ -217,7 +219,6 @@ dcli t = case constructor t of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
                             CIf -> env (parent t)
-                            CElse -> env (parent t)
                             CWhile -> env (parent t)
                             CNestedWhile -> env (parent t)
                             CNestedIf -> env (parent t)
@@ -233,7 +234,6 @@ dcli t = case constructor t of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
                             CIf -> env (parent t)
-                            CElse -> env (parent t)
                             CWhile -> env (parent t)
                             CNestedWhile -> env (parent t)
                             CNestedIf -> env (parent t)
@@ -244,12 +244,11 @@ dcli t = case constructor t of
                             COpenIf -> []
                             COpenLet -> []
                             COpenWhile -> []
-                            otherwise -> dclo (t.$<1)
+                            otherwise -> dcli (parent t)
             CLet -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
                             CIf -> env (parent t)
-                            CElse -> env (parent t)
                             CWhile -> env (parent t)
                             CNestedWhile -> env (parent t)
                             CNestedIf -> env (parent t)
@@ -265,7 +264,6 @@ dcli t = case constructor t of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
                             CIf -> env (parent t)
-                            CElse -> env (parent t)
                             CWhile -> env (parent t)
                             CNestedWhile -> env (parent t)
                             CNestedIf -> env (parent t)
@@ -281,7 +279,6 @@ dcli t = case constructor t of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
                             CIf -> env (parent t)
-                            CElse -> env (parent t)
                             CWhile -> env (parent t)
                             CNestedWhile -> env (parent t)
                             CNestedIf -> env (parent t)
@@ -294,9 +291,6 @@ dcli t = case constructor t of
                             COpenWhile -> []
                             otherwise -> dclo (t.$<1)
             CIf -> case  (constructor $ parent t) of
-                            CNestedIf -> env (parent t)
-                            COpenIf -> []
-            CElse -> case  (constructor $ parent t) of
                             CNestedIf -> env (parent t)
                             COpenIf -> []
             CWhile -> case  (constructor $ parent t) of
@@ -365,10 +359,8 @@ env t = case constructor t of
                     CLet    -> env (parent t)
                     CDefFuncao    -> env (parent t)
                     CIf -> env (parent t)
-                    CElse -> env (parent t)
                     CWhile -> env (parent t)
                     CNestedWhile -> env (parent t)
-                    CNestedIf -> env (parent t)
                     CNestedFuncao -> env (parent t)
                     CNestedLet -> env (parent t)
                     CNestedReturn -> env (parent t)
@@ -413,7 +405,7 @@ scopes ag = case (constructor ag) of
     CVar -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
     CInc -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag)
     CDec -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag)
-    CReturn -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CReturn -> (scopes (ag.$1))
     CBool -> []
     CDecl -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2))
     CArg -> mustNotBeIn (lexeme ag, lev ag) (dcli ag)
@@ -429,7 +421,6 @@ scopes ag = case (constructor ag) of
     CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
     CName -> []
     CIf -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-    CElse -> (scopes (ag.$1)) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
     CWhile -> (scopes (ag.$1)) ++ (scopes (ag.$2)) 
     COpenFuncao -> scopes (ag.$1)
     COpenIf -> scopes (ag.$1)
