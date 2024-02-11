@@ -33,6 +33,11 @@ treeT4 = OpenFuncao (DefFuncao (Name "count25") NilIts
                                     NilIts)))
             NilIts)))
 
+treeT5 = OpenFuncao (DefFuncao (Name "count25") NilIts
+            (ConsIts (NestedLet (Let (ConsIts (Decl "b" (Const 100)) NilIts)
+                                ((Inc (Var "a")))))
+            NilIts))
+
 
 type Env    = [(String, Int)]
 type Errors = [String]
@@ -160,7 +165,9 @@ dcli t = case constructor t of
             CNot -> dcli (parent t)
             CConst -> dcli (parent t)
             CVar -> dcli (parent t)
-            CInc -> dcli (parent t)
+            CInc -> case  (constructor $ parent t) of
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
             CDec -> dcli (parent t)
             CReturn -> dcli (parent t)
             CBool -> dcli (parent t)
@@ -214,7 +221,7 @@ dcli t = case constructor t of
                             COpenIf -> []
                             COpenLet -> []
                             COpenWhile -> []
-                            otherwise -> dclo (t.$<1)
+                            otherwise -> dcli (parent t)
             CNestedFuncao -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
@@ -229,7 +236,7 @@ dcli t = case constructor t of
                             COpenIf -> []
                             COpenLet -> []
                             COpenWhile -> []
-                            otherwise -> dclo (t.$<1)
+                            otherwise -> dcli (parent t)
             CNestedReturn -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
@@ -259,7 +266,7 @@ dcli t = case constructor t of
                             COpenIf -> []
                             COpenLet -> []
                             COpenWhile -> []
-                            otherwise -> dclo (t.$<1)
+                            otherwise -> dcli (parent t)
             CFuncao -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
@@ -274,7 +281,7 @@ dcli t = case constructor t of
                             COpenIf -> []
                             COpenLet -> []
                             COpenWhile -> []
-                            otherwise -> dclo (t.$<1)
+                            otherwise -> dcli (parent t)
             CDefFuncao -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
@@ -289,7 +296,7 @@ dcli t = case constructor t of
                             COpenIf -> []
                             COpenLet -> []
                             COpenWhile -> []
-                            otherwise -> dclo (t.$<1)
+                            otherwise -> dcli (parent t)
             CIf -> case  (constructor $ parent t) of
                             CNestedIf -> env (parent t)
                             COpenIf -> []
@@ -303,7 +310,7 @@ dcli t = case constructor t of
             COpenWhile -> []
 
 
-lexeme a =  case (getHole a :: Maybe Exp) of
+lexeme a = case (getHole a :: Maybe Exp) of
             Just (Var a)          -> a
             otherwise             -> case (getHole a :: Maybe Item) of
                 Just (Decl a _)         -> a
@@ -315,7 +322,7 @@ lexeme a =  case (getHole a :: Maybe Exp) of
                         otherwise                 -> error "Error in lexeme!"
 
 dclo :: Typeable a => Zipper a -> Env
-dclo t = case constructor t of
+dclo t =  case constructor t of
             CDecl -> (lexeme t,lev t) : (dcli t)
             CVar -> (lexeme t,lev t) : (dcli t)
             CFuncao -> (lexeme t,lev t) : (dcli t)
@@ -349,10 +356,10 @@ env t = case constructor t of
             CArg -> env (parent t)
             CIncrement -> env (parent t)
             CDecrement -> env (parent t)
-            COpenFuncao -> dclo t
-            COpenIf -> dclo t
-            COpenLet -> dclo t
-            COpenWhile -> dclo t
+            COpenFuncao -> []
+            COpenIf -> []
+            COpenLet -> []
+            COpenWhile -> []
             CConsIts -> env (parent t)
             CNilIts -> env (parent t)
             _ -> case (constructor $ parent t) of
@@ -400,11 +407,11 @@ scopes ag = case (constructor ag) of
     CLTE -> (scopes (ag.$1)) ++ (scopes (ag.$2))
     CAnd -> (scopes (ag.$1)) ++ (scopes (ag.$2))
     COr -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-    CNot -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CNot -> (scopes (ag.$1))
     CConst -> []
     CVar -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
-    CInc -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag)
-    CDec -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag)
+    CInc -> (scopes (ag.$1))
+    CDec -> (scopes (ag.$1))
     CReturn -> (scopes (ag.$1))
     CBool -> []
     CDecl -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2))
@@ -416,7 +423,7 @@ scopes ag = case (constructor ag) of
     CNestedLet -> scopes (ag.$1)
     CNestedFuncao -> scopes (ag.$1)
     CNestedReturn -> scopes (ag.$1)
-    CLet -> mustBeIn (lexeme ag) (env (ag.$1) ++ dcli ag)
+    CLet -> (scopes (ag.$1)) ++ (scopes (ag.$2))
     CFuncao -> mustBeIn (lexeme (ag.$1)) (dcli ag) ++ (scopes (ag.$2))
     CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
     CName -> []
