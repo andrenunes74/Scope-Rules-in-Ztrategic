@@ -42,13 +42,14 @@ treeT6 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter2")) 
             ((ConsIts (NestedFuncao (Funcao (Name "count25") (ConsIts (Arg (Var "counter2")) NilIts)))
             NilIts)))
 
-treeT7 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter")) NilIts)
+treeT7 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter1")) NilIts)
             (ConsIts (Increment (Var "counter"))
             (ConsIts (NestedIf (If (Less (Var "counter") (Const 5))
                                     (ConsIts (NestedFuncao (Funcao (Name "count25") (ConsIts (Arg (Var "counter")) NilIts)))
                                     NilIts)))
             NilIts)))
 
+{-trace ("func: " ++ show (constructor t)) $-}
 
 type Env    = [(String, Int)]
 type Errors = [String]
@@ -176,7 +177,7 @@ dcli t = case constructor t of
             CNot -> dcli (parent t)
             CConst -> dcli (parent t)
             CVar -> dcli (parent t)
-            CInc -> case  (constructor $ parent t) of -- (ignore) fazer isto pra todas as exp
+            CInc -> case  (constructor $ parent t) of -- fazer isto pra todas as exp
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
                     _ -> dcli (parent t)
             CDec -> dcli (parent t)
@@ -187,10 +188,15 @@ dcli t = case constructor t of
             CIncrement -> dcli (parent t)
             CDecrement -> dcli (parent t)
             CConsIts ->  case (constructor $ parent t) of
-                            CDefFuncao -> case arity t of
-                                2 -> [(lexeme $ parent t, lev $ parent t)]
-                                3 -> [(lexeme $ parent t, lev $ parent t)] ++ dclo ((parent t.$2))
-                            _ -> dcli (parent t)
+                                CDefFuncao -> case arity t of
+                                    2 -> case (constructor $ parent t.$2) of
+                                            CNilIts -> []
+                                            _ -> [(lexeme $ parent t, lev $ parent t)]
+                                    3 ->  case (constructor $ parent t.$2) of
+                                            CNilIts -> []
+                                            CConsIts -> [(lexeme $ parent t, lev $ parent t)] ++ dclo ((parent t.$2))
+                                CConsIts -> dclo (t.$<1)
+                                _ -> dcli (parent t)
             CNilIts -> dcli (parent t)
             CNestedIf -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
@@ -300,8 +306,8 @@ lexeme a = case (getHole a :: Maybe Exp) of
                         otherwise                 -> error "Error in lexeme!"
 
 dclo :: Typeable a => Zipper a -> Env
-dclo t =  case constructor t of
-            CDecl -> (lexeme t,lev t) : (dcli t)
+dclo t = case constructor t of
+            CDecl -> [(lexeme t,lev t)]
             CVar -> (lexeme t,lev t) : (dcli t)
             CFuncao -> (lexeme t,lev t) : (dcli t)
             CDefFuncao -> [(lexeme t,lev t)] ++ (dcli t)
@@ -314,7 +320,7 @@ dclo t =  case constructor t of
             otherwise -> dcli t
 
 env :: Typeable a => Zipper a -> Env
-env t =   case constructor t of
+env t = case constructor t of
             CAdd -> env (parent t)
             CSub -> env (parent t)
             CDiv -> env (parent t)
@@ -395,7 +401,7 @@ scopes ag = case (constructor ag) of
     CDec -> (scopes (ag.$1))
     CReturn -> (scopes (ag.$1))
     CBool -> []
-    CDecl -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2))
+    CDecl -> mustNotBeIn (lexeme (ag), lev ag) (dcli ag) ++ (scopes (ag.$2))
     CArg -> case (constructor $ parent $ parent ag) of 
                 CDefFuncao -> []
                 _ -> (scopes (ag.$1))
