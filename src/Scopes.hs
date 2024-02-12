@@ -155,7 +155,6 @@ constructor a = case (getHole a :: Maybe Exp) of
                                 Just (NilIts)         -> CNilIts
                                 otherwise                -> error "Error in constructor"
 
-
 lev :: (Typeable a) => Zipper a -> Int
 lev ag = case (constructor ag) of
             CLet -> 1 + lev (parent ag)
@@ -278,7 +277,6 @@ dcli t = case constructor t of
                             COpenLet -> []
                             COpenWhile -> []
                             otherwise -> dcli (parent t)
-            CNestedFuncao -> dcli (parent t)
             CNestedReturn -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
@@ -321,6 +319,7 @@ dcli t = case constructor t of
             CWhile -> case  (constructor $ parent t) of
                             CNestedWhile -> env (parent t)
                             COpenWhile -> []
+            CNestedFuncao -> dcli (parent t)
             CName -> dcli (parent t)
             CFuncao -> dcli (parent t)
             CDecl -> dcli (parent t)
@@ -333,7 +332,6 @@ dcli t = case constructor t of
             COpenIf -> []
             COpenLet -> []
             COpenWhile -> []
-
 
 lexeme a = case (getHole a :: Maybe Exp) of
             Just (Var a)          -> a
@@ -459,10 +457,10 @@ scopes ag = case (constructor ag) of
     CName -> []
     CNilIts -> []
     CVar -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CFuncao -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag) ++ (scopes (ag.$2))
     CDecl -> mustNotBeIn (lexeme (ag), lev ag) (dcli ag) ++ (scopes (ag.$2))
     CArg -> case (constructor $ parent $ parent ag) of 
                 CDefFuncao -> []
                 _ -> (scopes (ag.$1))
-    CFuncao -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag) ++ (scopes (ag.$2))
     CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
 
