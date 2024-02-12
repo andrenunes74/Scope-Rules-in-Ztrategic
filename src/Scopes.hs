@@ -38,16 +38,25 @@ treeT5 = OpenFuncao (DefFuncao (Name "count25") NilIts
                                 ((Inc (Var "a")))))
             NilIts))
 
-treeT6 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter2")) NilIts)
+treeT6 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter")) NilIts)
             ((ConsIts (NestedFuncao (Funcao (Name "count25") (ConsIts (Arg (Var "counter2")) NilIts)))
             NilIts)))
 
-treeT7 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter1")) NilIts)
+treeT7 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter")) NilIts)
             (ConsIts (Increment (Var "counter"))
             (ConsIts (NestedIf (If (Less (Var "counter") (Const 5))
-                                    (ConsIts (NestedFuncao (Funcao (Name "count25") (ConsIts (Arg (Var "counter")) NilIts)))
+                                    (ConsIts (NestedFuncao (Funcao (Name "count254") (ConsIts (Arg (Var "counter")) NilIts)))
                                     NilIts)))
             NilIts)))
+
+treeT8 = OpenFuncao (DefFuncao (Name "main") NilIts
+            (ConsIts (Decl "a" (Const 100))
+            (ConsIts (Decl "b" (Const 50))
+            (ConsIts (NestedIf (If (Equals (Var "a") (Var "b"))
+                                    (ConsIts (NestedReturn (Return (Var "a"))) NilIts)))
+            (ConsIts (NestedWhile (While (Less (Var "a") (Const 200)) (ConsIts (Increment (Var "a")) NilIts)))
+            NilIts)))))
+                       
 
 {-trace ("func: " ++ show (constructor t)) $-}
 
@@ -163,30 +172,57 @@ lev ag = case (constructor ag) of
 
 dcli :: Typeable a => Zipper a -> Env
 dcli t = case constructor t of
-            CAdd -> dcli (parent t)
-            CSub -> dcli (parent t)
-            CDiv -> dcli (parent t)
-            CMul -> dcli (parent t)
-            CLess -> dcli (parent t)
-            CGreater -> dcli (parent t)
-            CEquals -> dcli (parent t)
-            CGTE -> dcli (parent t)
-            CLTE -> dcli (parent t)
-            CAnd -> dcli (parent t)
-            COr -> dcli (parent t)
-            CNot -> dcli (parent t)
-            CConst -> dcli (parent t)
-            CVar -> dcli (parent t)
-            CInc -> case  (constructor $ parent t) of -- fazer isto pra todas as exp
+            CAdd -> case  (constructor $ parent t) of
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
                     _ -> dcli (parent t)
-            CDec -> dcli (parent t)
-            CReturn -> dcli (parent t)
-            CBool -> dcli (parent t)
-            CDecl -> dcli (parent t)
-            CArg -> dcli (parent t)
-            CIncrement -> dcli (parent t)
-            CDecrement -> dcli (parent t)
+            CSub -> case  (constructor $ parent t) of
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CDiv -> case  (constructor $ parent t) of
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CMul -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CLess -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CGreater -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CEquals -> case  (constructor $ parent t) of
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CGTE -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CLTE -> case  (constructor $ parent t) of
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CAnd -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            COr -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CNot -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CConst -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CVar -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CInc -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CDec -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
+            CBool -> case  (constructor $ parent t) of 
+                    CLet -> dclo (parent t.$1) ++ dcli (parent t)
+                    _ -> dcli (parent t)
             CConsIts ->  case (constructor $ parent t) of
                                 CDefFuncao -> case arity t of
                                     2 -> case (constructor $ parent t.$2) of
@@ -195,9 +231,8 @@ dcli t = case constructor t of
                                     3 ->  case (constructor $ parent t.$2) of
                                             CNilIts -> []
                                             CConsIts -> [(lexeme $ parent t, lev $ parent t)] ++ dclo ((parent t.$2))
-                                CConsIts -> dclo (t.$<1)
+                                CConsIts -> dclo (t.$<1) ++ dcli (t.$<1)
                                 _ -> dcli (parent t)
-            CNilIts -> dcli (parent t)
             CNestedIf -> case  (constructor $ parent t) of
                             CLet    -> env (parent t)
                             CDefFuncao    -> env (parent t)
@@ -274,7 +309,6 @@ dcli t = case constructor t of
                             COpenLet -> []
                             COpenWhile -> []
                             otherwise -> dcli (parent t)
-            CFuncao -> dcli (parent t)
             CDefFuncao -> case  (constructor $ parent t) of
                             COpenFuncao -> []
                             COpenIf -> []
@@ -288,6 +322,13 @@ dcli t = case constructor t of
                             CNestedWhile -> env (parent t)
                             COpenWhile -> []
             CName -> dcli (parent t)
+            CFuncao -> dcli (parent t)
+            CDecl -> dcli (parent t)
+            CArg -> dcli (parent t)
+            CReturn -> dcli (parent t)
+            CIncrement -> dcli (parent t)
+            CDecrement -> dcli (parent t)
+            CNilIts -> dcli (parent t)
             COpenFuncao -> []
             COpenIf -> []
             COpenLet -> []
@@ -313,7 +354,7 @@ dclo t = case constructor t of
             CDefFuncao -> [(lexeme t,lev t)] ++ (dcli t)
             COpenFuncao -> dclo (t.$1)
             CName -> (lexeme t,lev t) : (dcli t)
-            CConsIts -> dclo (t.$1) ++ (dclo (t.$2))
+            CConsIts -> dclo (t.$1) ++ (dclo (t.$2)) ++ (dcli $ parent t)
             CArg -> case (constructor $ parent $ parent t) of 
                 CFuncao -> dcli t
                 CDefFuncao -> dclo (t.$1)
@@ -334,7 +375,6 @@ env t = case constructor t of
             COr -> env (parent t)
             CNot -> env (parent t)
             CConst -> env (parent t)
-            CVar -> allDecls (parent t)
             CInc -> env (parent t)
             CDec -> env (parent t)
             CReturn -> env (parent t)
@@ -343,12 +383,13 @@ env t = case constructor t of
             CArg -> env (parent t)
             CIncrement -> env (parent t)
             CDecrement -> env (parent t)
+            CConsIts -> env (parent t)
+            CNilIts -> env (parent t)
+            CVar -> allDecls (parent t)
             COpenFuncao -> []
             COpenIf -> []
             COpenLet -> []
             COpenWhile -> []
-            CConsIts -> env (parent t)
-            CNilIts -> env (parent t)
             _ -> case (constructor $ parent t) of
                     CLet    -> env (parent t)
                     CDefFuncao    -> env (parent t)
@@ -394,17 +435,11 @@ scopes ag = case (constructor ag) of
     CLTE -> (scopes (ag.$1)) ++ (scopes (ag.$2))
     CAnd -> (scopes (ag.$1)) ++ (scopes (ag.$2))
     COr -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CLet -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CIf -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CWhile -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CConsIts -> (scopes (ag.$1)) ++ (scopes (ag.$2))
     CNot -> (scopes (ag.$1))
-    CConst -> []
-    CVar -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
-    CInc -> (scopes (ag.$1))
-    CDec -> (scopes (ag.$1))
-    CReturn -> (scopes (ag.$1))
-    CBool -> []
-    CDecl -> mustNotBeIn (lexeme (ag), lev ag) (dcli ag) ++ (scopes (ag.$2))
-    CArg -> case (constructor $ parent $ parent ag) of 
-                CDefFuncao -> []
-                _ -> (scopes (ag.$1))
     CIncrement -> scopes (ag.$1)
     CDecrement -> scopes (ag.$1)
     CNestedIf -> scopes (ag.$1)
@@ -412,16 +447,22 @@ scopes ag = case (constructor ag) of
     CNestedLet -> scopes (ag.$1)
     CNestedFuncao -> scopes (ag.$1)
     CNestedReturn -> scopes (ag.$1)
-    CLet -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-    CFuncao -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag) ++ (scopes (ag.$2))
-    CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
-    CName -> []
-    CIf -> (scopes (ag.$1)) ++ (scopes (ag.$2))
-    CWhile -> (scopes (ag.$1)) ++ (scopes (ag.$2)) 
+    CInc -> (scopes (ag.$1))
+    CDec -> (scopes (ag.$1))
+    CReturn -> (scopes (ag.$1))
     COpenFuncao -> scopes (ag.$1)
     COpenIf -> scopes (ag.$1)
     COpenLet -> scopes (ag.$1)
     COpenWhile -> scopes (ag.$1)
-    CConsIts -> (scopes (ag.$1)) ++ (scopes (ag.$2))
+    CConst -> []
+    CBool -> []
+    CName -> []
     CNilIts -> []
+    CVar -> mustBeIn (lexeme ag) (env ag ++ dcli ag)
+    CDecl -> mustNotBeIn (lexeme (ag), lev ag) (dcli ag) ++ (scopes (ag.$2))
+    CArg -> case (constructor $ parent $ parent ag) of 
+                CDefFuncao -> []
+                _ -> (scopes (ag.$1))
+    CFuncao -> mustBeIn (lexeme (ag.$1)) (env ag ++ dcli ag) ++ (scopes (ag.$2))
+    CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
 
