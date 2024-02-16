@@ -464,5 +464,5 @@ scopes ag = case (constructor ag) of
                 _ -> (scopes (ag.$1))
     CDefFuncao -> mustNotBeIn (lexeme (ag.$1), lev ag) (dcli ag) ++ (scopes (ag.$2)) ++ (scopes (ag.$3))
 
-main :: Item -> Errors
-main p = scopes (mkAG p)
+main' :: Item -> Errors
+main' p = scopes (mkAG p)
