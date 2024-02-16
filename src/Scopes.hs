@@ -12,7 +12,7 @@ import Data.Maybe
 import Debug.Trace
 
 treeT1 = OpenFuncao (DefFuncao (Name "main") NilIts
-            (ConsIts (Decl "a" (Const 100))
+            (ConsIts (Decl "b" (Const 100))
             (ConsIts (Decl "x" (Add (Var "a") (Var "b"))) NilIts)))
 
 treeT2 = OpenFuncao (DefFuncao (Name "main") NilIts
