@@ -1,10 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-Module that contains the datatypes of the parser-}
+
 module Core where
 import Data.Data
-{--------------------------------
-********** Expressions **********
----------------------------------}
+
 data Exp = Add Exp Exp
          | Sub Exp Exp
          | Div Exp Exp
@@ -25,9 +23,6 @@ data Exp = Add Exp Exp
          | Bool Bool
          deriving (Show,Eq,Data)
 
-{--------------------------------
-************* Item **************
----------------------------------}
 data Item = Decl String Exp
           | Arg Exp
           | Increment Exp
@@ -47,15 +42,9 @@ data Items = ConsIts Item Items
            | NilIts
            deriving (Show, Data,Eq)
 
-{--------------------------------
-************* Let ***************
----------------------------------}
 data Let = Let Items Exp
         deriving (Show,Eq,Data)
 
-{--------------------------------
-********** Functions ************
----------------------------------}
 data Funcao = Funcao Name Items
             | DefFuncao Name Items Items
             deriving (Show,Eq,Data)
@@ -63,14 +52,8 @@ data Funcao = Funcao Name Items
 data Name = Name String 
           deriving (Show,Eq,Data)
 
-{--------------------------------
-************** If ***************
----------------------------------}
 data If = If Exp Items
         deriving (Show,Eq,Data)
         
-{--------------------------------
-************ While **************
----------------------------------}
 data While = While Exp Items
         deriving (Show,Eq,Data)

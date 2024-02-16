@@ -11,54 +11,6 @@ import Library.ZipperAG
 import Data.Maybe
 import Debug.Trace
 
-treeT1 = OpenFuncao (DefFuncao (Name "main") NilIts
-            (ConsIts (Decl "b" (Const 100))
-            (ConsIts (Decl "x" (Add (Var "a") (Var "b"))) NilIts)))
-
-treeT2 = OpenFuncao (DefFuncao (Name "main") NilIts
-            (ConsIts (Decl "a" (Const 100))
-            (ConsIts (Decl "x" (Var "a")) NilIts)))
-
-treeT3 = OpenFuncao (DefFuncao (Name "count25") NilIts
-            (ConsIts (Decl "counter" (Const 0))
-            (ConsIts (NestedWhile (While ((Less (Var "counter") (Const 5)))
-                                    (ConsIts (Increment (Var "counter"))
-                                    NilIts)))
-            NilIts)))
-
-treeT4 = OpenFuncao (DefFuncao (Name "count25") NilIts
-            (ConsIts (Decl "counter" (Const 0))
-            (ConsIts (NestedIf (If ((Less (Var "counter") (Const 5)))
-                                    (ConsIts (NestedReturn (Return (Var "counter")))
-                                    NilIts)))
-            NilIts)))
-
-treeT5 = OpenFuncao (DefFuncao (Name "count25") NilIts
-            (ConsIts (NestedLet (Let (ConsIts (Decl "b" (Const 100)) NilIts)
-                                ((Inc (Var "a")))))
-            NilIts))
-
-treeT6 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter")) NilIts)
-            ((ConsIts (NestedFuncao (Funcao (Name "count25") (ConsIts (Arg (Var "counter2")) NilIts)))
-            NilIts)))
-
-treeT7 = OpenFuncao (DefFuncao (Name "count25") (ConsIts (Arg (Var "counter")) NilIts)
-            (ConsIts (Increment (Var "counter"))
-            (ConsIts (NestedIf (If (Less (Var "counter") (Const 5))
-                                    (ConsIts (NestedFuncao (Funcao (Name "count254") (ConsIts (Arg (Var "counter")) NilIts)))
-                                    NilIts)))
-            NilIts)))
-
-treeT8 = OpenFuncao (DefFuncao (Name "main") NilIts
-            (ConsIts (Decl "a" (Const 100))
-            (ConsIts (Decl "b" (Const 50))
-            (ConsIts (NestedIf (If (Equals (Var "a") (Var "b"))
-                                    (ConsIts (NestedReturn (Return (Var "a"))) NilIts)))
-            (ConsIts (NestedWhile (While (Less (Var "a") (Const 200)) (ConsIts (Increment (Var "a")) NilIts)))
-            NilIts)))))
-                       
-
-{-trace ("func: " ++ show (constructor t)) $-}
 
 type Env    = [(String, Int)]
 type Errors = [String]
