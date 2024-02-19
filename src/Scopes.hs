@@ -125,43 +125,43 @@ dcli :: Typeable a => Zipper a -> Env
 dcli t = case constructor t of
             CAdd -> case  (constructor $ parent t) of
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CSub -> case  (constructor $ parent t) of
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CDiv -> case  (constructor $ parent t) of
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CMul -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CLess -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CGreater -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CEquals -> case  (constructor $ parent t) of
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CGTE -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CLTE -> case  (constructor $ parent t) of
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CAnd -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             COr -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CNot -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CConst -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
-                    _ -> dcli (parent t)
+                    _ -> dclo (parent t)
             CVar -> case  (constructor $ parent t) of 
                     CLet -> dclo (parent t.$1) ++ dcli (parent t)
                     _ -> dcli (parent t)
@@ -361,7 +361,7 @@ allDecls ag = case constructor ag of
     COpenIf -> []
     COpenLet -> []
     COpenWhile -> []
-    _ -> dcli ag ++ env ag
+    _ -> dcli ag ++ env ag 
 
 mustBeIn :: String -> Env -> Errors
 mustBeIn name [] = [name]
