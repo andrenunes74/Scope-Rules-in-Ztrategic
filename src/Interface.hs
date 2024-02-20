@@ -69,7 +69,6 @@ instance Scopes (C.Item) where
         S.COr -> True
         _ -> False
     
-
 build :: Scopes a => Zipper a -> B.P
 build a = if isRoot a then B.Root (build' $ a.$1) else B.Root B.NilIts
 
@@ -83,8 +82,8 @@ build' a | isDecl a = case (S.constructor a) of
                        S.CFuncao -> B.ConsIts (B.Use (S.lexeme a)) (build' $ a.$2)
          | isBlock a = B.ConsIts (B.Block (TB.mergeIts (build' $ a.$1) (build' $ a.$2))) B.NilIts
          | isIts a = (TB.mergeIts (build' $ a.$1) (build' $ a.$2))
-         | isEndIts a = B.NilIts
          | isExp a = (TB.mergeIts (build' $ a.$1) (build' $ a.$2))
+         | isEndIts a = B.NilIts
          | otherwise = case (S.constructor a) of
                             S.CConst -> B.NilIts
                             S.CBool -> B.NilIts

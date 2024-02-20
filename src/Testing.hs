@@ -50,7 +50,6 @@ treeT8 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
             (C.ConsIts (C.NestedWhile (C.While (C.Less (C.Var "e") (C.Const 200)) (C.ConsIts (C.Increment (C.Var "x")) C.NilIts)))
             C.NilIts)))))
                        
-
 -- Test to check if the two aproaches give the same results
 trees = [treeT1,treeT2,treeT3,treeT4,treeT5,treeT6,treeT7,treeT8]
 test_same [] = []

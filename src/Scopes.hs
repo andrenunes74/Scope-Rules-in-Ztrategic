@@ -11,7 +11,6 @@ import Library.ZipperAG
 import Data.Maybe
 import Debug.Trace
 
-
 type Env    = [(String, Int)]
 type Errors = [String]
 type AGTree a  = Zipper a -> a
