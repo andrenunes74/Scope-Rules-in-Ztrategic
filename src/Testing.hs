@@ -1,6 +1,7 @@
 module Testing where
 import Scopes
 import ToBlock
+import Interface
 import qualified Core as C
 
 treeT1 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
@@ -14,7 +15,7 @@ treeT2 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
 treeT3 = C.OpenFuncao (C.DefFuncao (C.Name "count25") C.NilIts
             (C.ConsIts (C.Decl "counter" (C.Const 0))
             (C.ConsIts (C.NestedWhile (C.While ((C.Less (C.Var "counter1") (C.Const 5)))
-                                    (C.ConsIts (C.Increment (C.Var "counter"))
+                                    (C.ConsIts (C.Increment (C.Var "counter3"))
                                     C.NilIts)))
             C.NilIts)))
 
@@ -53,4 +54,4 @@ treeT8 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
 -- Test to check if the two aproaches give the same results
 trees = [treeT1,treeT2,treeT3,treeT4,treeT5,treeT6,treeT7,treeT8]
 test_same [] = []
-test_same (h:t) = (main h == main' h) : test_same t
+test_same (h:t) = ((main h == main' h) && (main' h == (main'' h))) : test_same t
