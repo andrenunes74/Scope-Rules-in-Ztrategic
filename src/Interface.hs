@@ -51,7 +51,7 @@ build' a | isDecl a = case (S.constructor a) of
          | isUse a = case (S.constructor a) of
                        S.CVar -> B.ConsIts (B.Use (S.lexeme a)) B.NilIts
                        S.CFuncao -> B.ConsIts (B.Use (S.lexeme a)) (build' $ a.$2)
-         | isBlock a = B.ConsIts (B.Block (TB.mergeIts (build' $ a.$1) (build' $ a.$2))) B.NilIts
+         | isBlock a = B.ConsIts (B.Block $ buildChildren a) B.NilIts
          | otherwise = case (S.constructor a) of
                             S.CConst -> B.NilIts
                             S.CBool -> B.NilIts
