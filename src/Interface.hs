@@ -51,24 +51,23 @@ build' a | isDecl a = case (S.constructor a) of
          | isUse a = case (S.constructor a) of
                        S.CVar -> B.ConsIts (B.Use (S.lexeme a)) B.NilIts
                        S.CFuncao -> B.ConsIts (B.Use (S.lexeme a)) (build' $ a.$2)
-         | isBlock a = B.ConsIts (B.Block $ buildChildren a) B.NilIts
+         | isBlock a = B.ConsIts (B.Block $ buildChildren build' a) B.NilIts
          | otherwise = case (S.constructor a) of
                             S.CConst -> B.NilIts
                             S.CBool -> B.NilIts
-                            S.CNilIts -> B.NilIts
-                            _ -> buildChildren a
+                            _ -> buildChildren build' a
 
-children :: Scopes a => Zipper a -> [B.Its]
-children ag = case down' ag of 
+children :: Scopes a => (Zipper a -> B.Its) -> Zipper a -> [B.Its]
+children buildFunc ag = case down' ag of 
   Nothing -> []
-  Just n -> build' n : brothers n 
+  Just n -> buildFunc n : brothers buildFunc n
 
-brothers :: Scopes a => Zipper a -> [B.Its]
-brothers ag = case right ag of 
- Nothing -> []
- Just n -> build' n : brothers n 
+brothers :: Scopes a => (Zipper a -> B.Its) -> Zipper a -> [B.Its]
+brothers buildFunc ag = case right ag of 
+  Nothing -> []
+  Just n -> buildFunc n : brothers buildFunc n
 
-buildChildren :: Scopes a => Zipper a -> B.Its
-buildChildren ag = foldr TB.mergeIts B.NilIts (children ag) 
+buildChildren :: Scopes a => (Zipper a -> B.Its) -> Zipper a -> B.Its
+buildChildren buildFunc ag = foldr TB.mergeIts B.NilIts (children buildFunc ag) 
 
 main'' a = M.block $ build $ mkAG a
