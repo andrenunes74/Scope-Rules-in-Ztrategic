@@ -42,7 +42,7 @@ lexeme_Name ag = case (getHole ag :: Maybe List) of
                           Just (NestedLet v _ _) -> v
                           _ -> case (getHole ag :: Maybe Exp) of
                                       Just (Var s) -> s 
-                                      _ -> error "Error in lexeme_Name!"
+                                      _ -> "Error in lexeme_Name!"
 lexeme_Exp :: Zipper a -> Maybe Exp
 lexeme_Exp ag = case (getHole ag :: Maybe List) of
                           Just(Assign _ e _) -> Just e

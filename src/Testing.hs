@@ -1,8 +1,10 @@
 module Testing where
 import Scopes
 import ToBlock
-import Interface
+import Core_Interface
+import Let_Interface
 import qualified Core as C
+import qualified Let.Shared as L 
 
 treeT1 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
             (C.ConsIts (C.Decl "d" (C.Const 100))
@@ -49,8 +51,19 @@ treeT8 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
                                     (C.ConsIts (C.NestedReturn (C.Return (C.Var "a"))) C.NilIts)))
             (C.ConsIts (C.NestedWhile (C.While (C.Less (C.Var "e") (C.Const 200)) (C.ConsIts (C.Increment (C.Var "x")) C.NilIts)))
             C.NilIts)))))
+
+treeL1 = L.Let ( L.Assign "w" (L.Add (L.Var "b") (L.Const (-16)))
+           $ L.Assign "c" (L.Const 8)
+           $ L.NestedLet "w" ( L.Let (L.Assign "z" (L.Add (L.Var "a") (L.Var "b")) L.EmptyList)
+                            $ (L.Add (L.Var "z") (L.Var "b")))
+           $ L.Assign "b" (L.Sub ((L.Add (L.Var "c") (L.Const 3))) (L.Var "c"))
+             L.EmptyList)
+      $ (L.Sub (L.Add (L.Var "c") (L.Var "a")) (L.Var "w"))
                        
 -- Test to check if the two aproaches give the same results
 trees = [treeT1,treeT2,treeT3,treeT4,treeT5,treeT6,treeT7,treeT8]
 test_same [] = []
 test_same (h:t) = ((main h == main' h) && (main' h == (main'' h))) : test_same t
+
+-- Test the let Interface
+test_let = main''' treeL1
