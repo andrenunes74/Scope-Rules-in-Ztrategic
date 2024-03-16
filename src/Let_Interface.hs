@@ -32,12 +32,17 @@ instance StrategicData (L.Let) where
                 || isJust (getHole t :: Maybe LS.Name)
 
 build :: I.Scopes a => Zipper a -> B.P
-build a = B.Root (I.buildChildren build' a)
+build a = B.Root (I.buildChildren build' a [])
 
-build' :: I.Scopes a => Zipper a -> B.Its
-build' a  | I.isDecl a = B.ConsIts (B.Decl (LS.lexeme_Name a)) (I.buildChildren build' a)
-          | I.isUse a = B.ConsIts (B.Use (LS.lexeme_Name a)) B.NilIts
-          | I.isBlock a = B.ConsIts (B.Block $ I.buildChildren build' a) B.NilIts
-          | otherwise = (I.buildChildren build' a)
+build' :: I.Scopes a => Zipper a -> B.Directions -> B.Its
+build' a d | I.isDecl a = B.ConsIts (B.Decl (LS.lexeme_Name a) d) (I.buildChildren build' a d)
+           | I.isUse a = B.ConsIts (B.Use (LS.lexeme_Name a) d) B.NilIts
+           | I.isBlock a = B.ConsIts (B.Block $ I.buildChildren build' a d) B.NilIts
+           | otherwise = (I.buildChildren build' a d)
 
-main''' a = M.block $ build $ mkAG a
+main''' a = build $ mkAG a
+
+main''''' a = M.block $ build $ mkAG a
+
+dir a b = LS.lexeme_Name $ I.applyDirections (mkAG a) b
+

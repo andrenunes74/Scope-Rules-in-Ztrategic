@@ -20,15 +20,35 @@ mergeIts :: B.Its -> B.Its -> B.Its
 mergeIts (B.NilIts) its = its
 mergeIts (B.ConsIts x xs) its = B.ConsIts x (mergeIts xs its)
 
-children :: Scopes a => (Zipper a -> B.Its) -> Zipper a -> [B.Its]
-children buildFunc ag = case S.down' ag of 
+children :: Scopes a => (Zipper a -> B.Directions -> B.Its) -> Zipper a -> B.Directions -> [B.Its]
+children buildFunc ag d = case S.down' ag of 
   Nothing -> []
-  Just n -> buildFunc n : brothers buildFunc n
+  Just n -> do  
+    let x = d ++ [B.D] 
+    buildFunc n x : brothers buildFunc n x  
 
-brothers :: Scopes a => (Zipper a -> B.Its) -> Zipper a -> [B.Its]
-brothers buildFunc ag = case S.right ag of 
+brothers :: Scopes a => (Zipper a -> B.Directions -> B.Its) -> Zipper a -> B.Directions -> [B.Its]
+brothers buildFunc ag d = case S.right ag of 
   Nothing -> []
-  Just n -> buildFunc n : brothers buildFunc n
+  Just n -> do 
+    let x = d ++ [B.R] 
+    buildFunc n x : brothers buildFunc n x  
 
-buildChildren :: Scopes a => (Zipper a -> B.Its) -> Zipper a -> B.Its
-buildChildren buildFunc ag = foldr mergeIts B.NilIts (children buildFunc ag) 
+
+buildChildren :: Scopes a => (Zipper a -> B.Directions -> B.Its) -> Zipper a -> B.Directions -> B.Its
+buildChildren buildFunc ag d = foldr mergeIts B.NilIts (children buildFunc ag d) 
+
+applyDirections :: Scopes a => Zipper a -> B.Directions -> Zipper a
+applyDirections ag [] = ag
+applyDirections ag (h:t)  | h == B.D = case S.down' ag of 
+                                        Nothing -> error "can't go there"
+                                        Just n -> applyDirections n t 
+                          | h == B.R = case S.right ag of 
+                                        Nothing -> error "can't go there"
+                                        Just n -> applyDirections n t 
+                          | h == B.U = case S.up ag of 
+                                        Nothing -> error "can't go there"
+                                        Just n -> applyDirections n t 
+                          | h == B.L = case S.left ag of 
+                                        Nothing -> error "can't go there"
+                                        Just n -> applyDirections n t 

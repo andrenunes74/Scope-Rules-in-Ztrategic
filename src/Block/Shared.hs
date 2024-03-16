@@ -16,6 +16,9 @@ import Data.Maybe
 import Data.Data
 import Data.List
 
+data Direction = U | D | R | L deriving(Show,Eq,Data)
+type Directions = [Direction]
+
 data P  = Root Its
           deriving (Typeable, Data,Eq)
 
@@ -23,8 +26,8 @@ data Its = ConsIts It Its
          | NilIts
        deriving (Typeable, Data,Eq)
 
-data It = Decl Name
-        | Use Name
+data It = Decl Name Directions
+        | Use Name Directions
         | Block Its
         deriving (Typeable, Data,Eq)
 
@@ -47,8 +50,8 @@ showIts NilIts              = ""
 instance Show It where
   show = showIt
 
-showIt (Decl s) = "Decl " ++ s
-showIt (Use s) = "Use " ++ s
+showIt (Decl s d) = "(Decl " ++ s ++ " | Path: " ++ show d ++ ")"
+showIt (Use s d) = "(Use " ++ s ++ " | Path: " ++ show d ++ ")"
 showIt (Block its) = "[ " ++ showIts its ++ " ]"
 
 type Env    = [(Name, Int)]
@@ -62,8 +65,6 @@ mustBeIn n e = if null (filter ((== n) . fst) e) then [n] else []
 mustBeIn' n e  | null (filter ((== n) . fst) e)  =  [n] 
                | otherwise                       =  []
 
-
-
 mustNotBeIn :: (Name,Int) -> Env -> Errors
 mustNotBeIn p e = if p `elem` e then [fst p] else []
 
@@ -73,15 +74,4 @@ mustNotBeIn'' :: (Name,Int) -> Env -> Errors
 mustNotBeIn'' p [] = []
 mustNotBeIn'' p (e:es) = if p == e then [fst p] else mustNotBeIn p es
 
-
-
---program = [Decl "y", Decl "x", Block [Decl "y", Use "y", Use "w"], Decl "x", Use "y"]
-pblock = Block (ConsIts (Decl "x") (ConsIts (Use "y") (ConsIts (Use "w") (NilIts))))
-program = Root $ ConsIts (Decl "y") (ConsIts (Decl "x") (ConsIts (pblock) (ConsIts (Decl "x") (ConsIts (Use "y") (NilIts)))))
-
-
---programUse = [ Use x,Use y,[ Use x,Use y,Use w ],Use z ]
-
-blockUse = Block (ConsIts (Use "x") (ConsIts (Use "y") (ConsIts (Use "w") (NilIts))))
-programUse = Root $ ConsIts (Use "x") (ConsIts (Use "y") (ConsIts (blockUse) (ConsIts (Use "z") (NilIts))))
 

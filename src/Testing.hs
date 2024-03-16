@@ -1,6 +1,6 @@
 module Testing where
 import Scopes
-import ToBlock
+--import ToBlock
 import Core_Interface
 import Let_Interface
 import qualified Core as C
@@ -63,7 +63,11 @@ treeL1 = L.Let ( L.Assign "w" (L.Add (L.Var "b") (L.Const (-16)))
 -- Test to check if the two aproaches give the same results
 trees = [treeT1,treeT2,treeT3,treeT4,treeT5,treeT6,treeT7,treeT8]
 test_same [] = []
-test_same (h:t) = ((main h == main' h) && (main' h == (main'' h))) : test_same t
+test_same (h:t) = (main' h == (main'' h)) : test_same t
 
--- Test the let Interface
+-- Test the new block with paths
+test_core = main'''' treeT8
 test_let = main''' treeL1
+
+-- Tests block processor on Ler
+test_coreP = main''''' treeL1

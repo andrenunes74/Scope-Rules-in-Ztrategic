@@ -41,17 +41,19 @@ instance StrategicData (C.Item) where
               || isJust (getHole t :: Maybe Bool)
         
 build :: I.Scopes a => Zipper a -> B.P
-build a = B.Root (I.buildChildren build' a)
+build a = B.Root (I.buildChildren build' a [])
 
-build' :: I.Scopes a => Zipper a -> B.Its
-build' a | I.isDecl a = case (S.constructor a) of
-                        S.CDecl -> B.ConsIts (B.Decl (S.lexeme a)) (I.buildChildren build' a)
-                        S.CDefFuncao -> B.ConsIts (B.Decl (S.lexeme a)) (I.buildChildren build' a)
-                        S.CVar -> B.ConsIts (B.Decl (S.lexeme a)) B.NilIts
-         | I.isUse a = case (S.constructor a) of
-                       S.CVar -> B.ConsIts (B.Use (S.lexeme a)) B.NilIts
-                       S.CFuncao -> B.ConsIts (B.Use (S.lexeme a)) (I.buildChildren build' a)
-         | I.isBlock a = B.ConsIts (B.Block (I.buildChildren build' a)) B.NilIts
-         | otherwise = (I.buildChildren build' a)
+build' :: I.Scopes a => Zipper a -> B.Directions -> B.Its
+build' a d | I.isDecl a = case (S.constructor a) of
+                        S.CDecl -> B.ConsIts (B.Decl (S.lexeme a) d) (I.buildChildren build' a d)
+                        S.CDefFuncao -> B.ConsIts (B.Decl (S.lexeme a) d) (I.buildChildren build' a d)
+                        S.CVar -> B.ConsIts (B.Decl (S.lexeme a) d) B.NilIts
+           | I.isUse a = case (S.constructor a) of
+                       S.CVar -> B.ConsIts (B.Use (S.lexeme a) d) B.NilIts
+                       S.CFuncao -> B.ConsIts (B.Use (S.lexeme a) d) (I.buildChildren build' a d)
+           | I.isBlock a = B.ConsIts (B.Block (I.buildChildren build' a d)) B.NilIts
+           | otherwise = (I.buildChildren build' a d)
 
 main'' a = M.block $ build $ mkAG a
+
+main'''' a = build $ mkAG a
