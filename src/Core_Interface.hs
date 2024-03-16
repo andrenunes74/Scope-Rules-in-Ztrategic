@@ -57,3 +57,5 @@ build' a d | I.isDecl a = case (S.constructor a) of
 main'' a = M.block $ build $ mkAG a
 
 main'''' a = build $ mkAG a
+
+dir' a b = S.lexeme $ I.applyDirections (mkAG a) b

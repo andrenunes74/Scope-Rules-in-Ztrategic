@@ -5,6 +5,7 @@ import Core_Interface
 import Let_Interface
 import qualified Core as C
 import qualified Let.Shared as L 
+import qualified Block.Shared as B
 
 treeT1 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
             (C.ConsIts (C.Decl "d" (C.Const 100))
@@ -69,5 +70,12 @@ test_same (h:t) = (main' h == (main'' h)) : test_same t
 test_core = main'''' treeT8
 test_let = main''' treeL1
 
--- Tests block processor on Ler
-test_coreP = main''''' treeL1
+-- Tests block processor on Let and Core
+test_LetP = main''''' treeL1
+test_coreP = main'' treeT8
+
+-- Test apply directions on Let -> "a"
+test_dir_let = dir treeL1 [B.D,B.D,B.R,B.D,B.R,B.D,B.D,B.D,B.D]
+
+-- Test apply directions on Core -> "b"
+test_dir_Core = dir' treeT8 [B.D,B.D,B.R,B.R,B.D,B.R,B.D]
