@@ -34,21 +34,20 @@ brothers buildFunc ag d = case S.right ag of
     let x = d ++ [B.R] 
     buildFunc n x : brothers buildFunc n x  
 
-
 buildChildren :: Scopes a => (Zipper a -> B.Directions -> B.Its) -> Zipper a -> B.Directions -> B.Its
 buildChildren buildFunc ag d = foldr mergeIts B.NilIts (children buildFunc ag d) 
 
 applyDirections :: Scopes a => Zipper a -> B.Directions -> Zipper a
 applyDirections ag [] = ag
 applyDirections ag (h:t)  | h == B.D = case S.down' ag of 
-                                        Nothing -> error "can't go there"
+                                        Nothing -> error "Can't go there!"
                                         Just n -> applyDirections n t 
                           | h == B.R = case S.right ag of 
-                                        Nothing -> error "can't go there"
+                                        Nothing -> error "Can't go there!"
                                         Just n -> applyDirections n t 
                           | h == B.U = case S.up ag of 
-                                        Nothing -> error "can't go there"
+                                        Nothing -> error "Can't go there!"
                                         Just n -> applyDirections n t 
                           | h == B.L = case S.left ag of 
-                                        Nothing -> error "can't go there"
+                                        Nothing -> error "Can't go there!"
                                         Just n -> applyDirections n t 
