@@ -6,6 +6,7 @@ import Let_Interface
 import qualified Core as C
 import qualified Let.Shared as L 
 import qualified Block.Shared as B
+import qualified Let.Pretty as PP 
 
 treeT1 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
             (C.ConsIts (C.Decl "d" (C.Const 100))

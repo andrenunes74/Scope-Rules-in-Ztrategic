@@ -1,7 +1,7 @@
-module Examples.AG.Let.Pretty where
+module Let.Pretty where
 
-import Examples.AG.Let.Shared
-import Examples.AG.PP.Memo.Interface
+import Let.Shared
+import PP.Memo.Interface
 
 
 pretty :: Root -> IO ()
