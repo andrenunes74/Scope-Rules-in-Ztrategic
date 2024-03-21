@@ -7,6 +7,8 @@ import qualified Core as C
 import qualified Let.Shared as L 
 import qualified Block.Shared as B
 import qualified Let.Pretty as PP 
+import qualified IScopes as I 
+import Data.Generics.Zipper
 
 treeT1 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
             (C.ConsIts (C.Decl "d" (C.Const 100))
@@ -55,7 +57,7 @@ treeT8 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
             C.NilIts)))))
 
 treeL1 = L.Let ( L.Assign "w" (L.Add (L.Var "b") (L.Const (-16)))
-           $ L.Assign "c" (L.Const 8)
+           $ L.Assign "a" (L.Const 8)
            $ L.NestedLet "w" ( L.Let (L.Assign "z" (L.Add (L.Var "a") (L.Var "b")) L.EmptyList)
                             $ (L.Add (L.Var "z") (L.Var "b")))
            $ L.Assign "b" (L.Sub ((L.Add (L.Var "c") (L.Const 3))) (L.Var "c"))
@@ -80,3 +82,5 @@ test_dir_let = dir treeL1 [B.D,B.D,B.R,B.D,B.R,B.D,B.D,B.D,B.D]
 
 -- Test apply directions on Core -> "b"
 test_dir_core = dir' treeT8 [B.D,B.D,B.R,B.R,B.D,B.R,B.D]
+
+test = fromZipper $ I.applyErrors (toZipper treeL1) (test_letP)

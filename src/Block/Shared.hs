@@ -58,10 +58,10 @@ type Env    = [(Name, Int, It)]
 type Errors = [(Name, It, String)]
 
 mustBeIn :: Name -> It -> Env -> Errors
-mustBeIn n i e = if null (filter ((== n) . fst3) e) then [(n, i, "Undeclared use!")] else []
+mustBeIn n i e = if null (filter ((== n) . fst3) e) then [(n, i, " <= [Undeclared use!]")] else []
 
 mustNotBeIn :: (Name, Int) -> It -> Env -> Errors
-mustNotBeIn p@(name, _) i e = if p `elem` map (\(name', _, _) -> (name', 0)) e then [(name, i, "Duplicated declaration")] else []
+mustNotBeIn p@(name, _) i e = if p `elem` map (\(name', _, _) -> (name', 0)) e then [(name, i, " <= [Duplicated declaration!]")] else []
 
 fst3 :: (a, b, c) -> a
 fst3 (x, _, _) = x
