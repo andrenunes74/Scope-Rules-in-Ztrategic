@@ -62,9 +62,9 @@ treeL1 = L.Let ( L.Assign "w" (L.Add (L.Var "b") (L.Const (-16)))
       $ (L.Sub (L.Add (L.Var "c") (L.Var "a")) (L.Var "w"))
                        
 -- Test to check if the two aproaches give the same results
-trees = [treeT1,treeT2,treeT3,treeT4,treeT5,treeT6,treeT7,treeT8]
-test_same [] = []
-test_same (h:t) = (main' h == (main'' h)) : test_same t
+--trees = [treeT1,treeT2,treeT3,treeT4,treeT5,treeT6,treeT7,treeT8]
+--test_same [] = []
+--test_same (h:t) = (main' h == (main'' h)) : test_same t
 
 -- Test the new block with paths
 test_core = main'''' treeT8

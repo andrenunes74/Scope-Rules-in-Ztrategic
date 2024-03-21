@@ -54,24 +54,16 @@ showIt (Decl s d) = "(Decl " ++ s ++ " | Path: " ++ show d ++ ")"
 showIt (Use s d) = "(Use " ++ s ++ " | Path: " ++ show d ++ ")"
 showIt (Block its) = "[ " ++ showIts its ++ " ]"
 
-type Env    = [(Name, Int)]
-type Errors = [Name]
+type Env    = [(Name, Int, It)]
+type Errors = [(Name, It, String)]
 
+mustBeIn :: Name -> It -> Env -> Errors
+mustBeIn n i e = if null (filter ((== n) . fst3) e) then [(n, i, "Undeclared use!")] else []
 
-mustBeIn :: Name -> Env -> Errors
-mustBeIn n e = if null (filter ((== n) . fst) e) then [n] else []
+mustNotBeIn :: (Name, Int) -> It -> Env -> Errors
+mustNotBeIn p@(name, _) i e = if p `elem` map (\(name', _, _) -> (name', 0)) e then [(name, i, "Duplicated declaration")] else []
 
-
-mustBeIn' n e  | null (filter ((== n) . fst) e)  =  [n] 
-               | otherwise                       =  []
-
-mustNotBeIn :: (Name,Int) -> Env -> Errors
-mustNotBeIn p e = if p `elem` e then [fst p] else []
-
-mustNotBeIn' p l = nub [ fst p  |  e <- l , e == p ]
-
-mustNotBeIn'' :: (Name,Int) -> Env -> Errors
-mustNotBeIn'' p [] = []
-mustNotBeIn'' p (e:es) = if p == e then [fst p] else mustNotBeIn p es
+fst3 :: (a, b, c) -> a
+fst3 (x, _, _) = x
 
 

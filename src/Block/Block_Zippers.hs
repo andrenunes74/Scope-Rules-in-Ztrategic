@@ -26,7 +26,7 @@ dclo :: AGTree Env
 dclo t =  case constructor t of
                     CNilIts   -> dcli t
                     CConsIts  -> dclo (t.$2)
-                    CDecl     -> (lexeme t,lev t) : (dcli t)
+                    CDecl     -> (lexeme t,lev t, (fromJust $ getHole t)) : (dcli t)
                     CUse      -> dcli t
                     CBlock    -> dcli t
 
@@ -36,8 +36,8 @@ errors t =  case constructor t of
                        CNilIts   -> []
                        CConsIts  -> (errors (t.$1)) ++ (errors (t.$2))
                        CBlock    -> errors (t.$1)                    
-                       CUse      -> (lexeme t)  `mustBeIn` (env t)
-                       CDecl     -> (lexeme t,lev t) `mustNotBeIn` (dcli t)
+                       CUse      -> mustBeIn (lexeme t) (fromJust $ getHole t) (env t)
+                       CDecl     -> mustNotBeIn (lexeme t,lev t) (fromJust $ getHole t) (dcli t)
 
 
 ---- Inheritted Attributes ----
