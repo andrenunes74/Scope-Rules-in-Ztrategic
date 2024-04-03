@@ -34,6 +34,7 @@ instance I.Scopes (C.Item) where
         S.CWhile -> True
         S.CLet -> True
         _ -> False
+    isGlobal ag = False
 
 instance StrategicData (C.Item) where
   isTerminal t = isJust (getHole t :: Maybe Int)

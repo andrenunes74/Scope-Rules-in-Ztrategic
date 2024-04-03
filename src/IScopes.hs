@@ -15,6 +15,7 @@ class (Typeable a, S.StrategicData a, Data a) => Scopes a where
     isDecl :: (Typeable a, S.StrategicData a) => Zipper a -> Bool
     isUse :: (Typeable a, S.StrategicData a) => Zipper a -> Bool
     isBlock :: (Typeable a, S.StrategicData a) => Zipper a -> Bool
+    isGlobal :: (Typeable a, S.StrategicData a) => Zipper a -> Bool
 
 mergeIts :: B.Its -> B.Its -> B.Its
 mergeIts (B.NilIts) its = its
@@ -77,3 +78,6 @@ applyErrors ag e = do
 applyErrors' :: Scopes a => Zipper a -> [(B.Directions,String)] -> Zipper a
 applyErrors' ag [] = ag 
 applyErrors' ag ((a,b): t) = applyErrors' (mkAG $ fromZipper $ (modifyZipperAlongPath ag a b)) t
+
+
+--declarações globais, env para dg, dcli root = env dg

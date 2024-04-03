@@ -26,6 +26,7 @@ instance I.Scopes (L.Let) where
     isBlock ag = case (LS.constructor ag) of
         LS.CLet -> True
         _ -> False
+    isGlobal ag = False
 
 instance StrategicData (L.Let) where
     isTerminal t = isJust (getHole t :: Maybe Int)
@@ -45,4 +46,3 @@ main''' a = build $ mkAG a
 main''''' a = M.block $ build $ mkAG a
 
 dir a b = LS.lexeme_Name $ I.applyDirections (mkAG a) b
-

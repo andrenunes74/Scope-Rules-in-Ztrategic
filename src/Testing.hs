@@ -83,4 +83,6 @@ test_dir_let = dir treeL1 [B.D,B.D,B.R,B.D,B.R,B.D,B.D,B.D,B.D]
 -- Test apply directions on Core -> "b"
 test_dir_core = dir' treeT8 [B.D,B.D,B.R,B.R,B.D,B.R,B.D]
 
+-- Test block processor on Let and Core with PP
 test = fromZipper $ I.applyErrors (toZipper treeL1) (test_letP)
+test2 = fromZipper $ I.applyErrors (toZipper treeT8) (test_coreP)
