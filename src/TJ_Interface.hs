@@ -71,15 +71,18 @@ globals a d | I.isGlobal a = case (TJ.constructor a) of
                                 TJ.CDefClass -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren globals a d)
             | otherwise = (I.buildChildren globals a d)
 
-
+--Test block translator
 main a = build $ mkAG a
+--Test global vars colector
 main' a = globals' $ mkAG a
+--Test block processor for toy_java
 main'' a = block (env [] (mkAG $ globals' $ mkAG a)) (build $ mkAG a)
+--Test global vars env colector
 main''' a = (env [] (mkAG $ globals' $ mkAG a))
 
---type Env    = [(Name, Int, It)]
---type Errors = [(Name, It, String)]
-
+----------------------------------------------------------------------------------------------------------------------------------------------
+-- Object oriented block processor
+----------------------------------------------------------------------------------------------------------------------------------------------
 dclo :: BS.Env -> Zipper BS.P -> BS.Env
 dclo a t =  case BS.constructor t of
                     BS.CNilIts   -> dcli a t
@@ -123,6 +126,7 @@ lev t =  case BS.constructor t of
                                         BS.CBlock    -> (lev (parent t)) + 1
                                         BS.CConsIts  -> lev (parent t)
                                         BS.CRoot     -> 0
+
 env :: BS.Env -> Zipper BS.P -> BS.Env
 env a t =  case BS.constructor t of
                     BS.CRoot      ->  dclo a t
@@ -141,21 +145,17 @@ mustBeIn n i e a = if (null (filter ((== n) . fst3) (e++a)))
 
 mustNotBeInE :: BS.Name ->  BS.It -> BS.Env -> BS.Errors
 mustNotBeInE name item e =
-    let names = map (\(name', _, _) -> name') e in
-    if (name `elem` names) then
-        [(name, item, " <= [Duplicated declaration!]")]
-    else
-        []
+    let names = map (\(name', _, _) -> name') e 
+        errorMsg = " <= [Duplicated declaration!]"
+    in
+    if (name `elem` names) then [(name, item, errorMsg)] else []
 
 mustNotBeInA :: BS.Name -> BS.It -> BS.Env -> BS.Errors
 mustNotBeInA name item a =
     let items = filter (\(name', _, item') -> name' == name && item /= item') a
         errorMsg = " <= [Different declaration!]"
     in
-    if not (null items) then
-       [(name, item, errorMsg)]
-    else
-        []
+    if not (null items) then [(name, item, errorMsg)] else []
 
 mustNotBeIn :: BS.Name -> BS.It -> BS.Env -> BS.Env -> BS.Errors
 mustNotBeIn name item e a =
@@ -166,3 +166,4 @@ fst3 (x, _, _) = x
 
 block :: BS.Env -> BS.P -> B.Errors
 block a p = errors a (mkAG p)
+

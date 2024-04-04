@@ -4,6 +4,20 @@ module Toy_Java where
 import Data.Data
 import Data.Generics.Zipper
 
+{- 
+Class Class1 {
+        Global x = 5 
+        Global def func () {
+                d = 100
+                x = a + x
+        }
+}
+
+Class Class2 {
+        Class1 x
+}
+-}
+
 rootInstance = (ConsIts 
                     (DefClass "Class1" 
                         (ConsIts (Global (Decl "x" (Const 5))) 
@@ -24,21 +38,6 @@ rootInstance = (ConsIts
                             (ConsIts (Class "Class1" (Decl "x" (Var ""))) NilIts)
                         ) 
                         NilIts))
-
-
-{- 
-Class Class1 {
-        Global x = 5 
-        Global def func () {
-                d = 100
-                x = a + x
-        }
-}
-
-Class Class2 {
-        Class1 x
-}
--}
 
 data Exp = Add Exp Exp
          | Sub Exp Exp
