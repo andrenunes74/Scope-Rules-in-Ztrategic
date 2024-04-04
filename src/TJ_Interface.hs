@@ -54,7 +54,7 @@ build' a d | I.isDecl a = case (TJ.constructor a) of
                         TJ.CDecl -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d)
                         TJ.CDefFuncao -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d)
                         TJ.CVar -> B.ConsIts (B.Decl (TJ.lexeme a) d) B.NilIts
-                        TJ.CDefClass -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d)
+                        TJ.CDefClass -> B.ConsIts (B.Block (B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d))) B.NilIts
            | I.isUse a = case (TJ.constructor a) of
                        TJ.CVar -> B.ConsIts (B.Use (TJ.lexeme a) d) B.NilIts
                        TJ.CFuncao -> B.ConsIts (B.Use (TJ.lexeme a) d) (I.buildChildren build' a d)
@@ -67,53 +67,52 @@ globals' a = B.Root (I.buildChildren globals a [])
 
 globals :: I.Scopes a => Zipper a -> B.Directions -> B.Its
 globals a d | I.isGlobal a = case (TJ.constructor a) of
-                                TJ.CGlobal -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren globals a d)
+                                TJ.CGlobal -> B.ConsIts (B.Decl (TJ.lexeme a) (d++[B.D])) (I.buildChildren globals a d)
                                 TJ.CDefClass -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren globals a d)
             | otherwise = (I.buildChildren globals a d)
 
 
 main a = build $ mkAG a
 main' a = globals' $ mkAG a
-main'' a = block $ build $ mkAG a
-main''' a = env $ mkAG $ globals' $ mkAG a
+main'' a = block (env [] (mkAG $ globals' $ mkAG a)) (build $ mkAG a)
+main''' a = (env [] (mkAG $ globals' $ mkAG a))
 
 --type Env    = [(Name, Int, It)]
 --type Errors = [(Name, It, String)]
 
-dclo :: BS.AGTree B.Env
-dclo t =  case BS.constructor t of
-                    BS.CNilIts   -> dcli t
-                    BS.CConsIts  -> dclo (t.$2)
-                    BS.CDecl     -> (BS.lexeme t,lev t, (fromJust $ getHole t)) : (dcli t)
-                    BS.CUse      -> dcli t
-                    BS.CBlock    -> dcli t
+dclo :: BS.Env -> Zipper BS.P -> BS.Env
+dclo a t =  case BS.constructor t of
+                    BS.CNilIts   -> dcli a t
+                    BS.CConsIts  -> dclo a (t.$2)
+                    BS.CDecl     -> (BS.lexeme t,lev t, (fromJust $ getHole t)) : (dcli a t)
+                    BS.CUse      -> dcli a t
+                    BS.CBlock    -> dcli a t
+                    BS.CRoot     -> dclo a (t.$1)
 
-errors :: BS.AGTree B.Errors
-errors t =  case BS.constructor t of
-                       BS.CRoot     -> errors (t.$1)    
+errors :: BS.Env -> Zipper BS.P -> B.Errors
+errors a t =  case BS.constructor t of
+                       BS.CRoot     -> errors a (t.$1)    
                        BS.CNilIts   -> []
-                       BS.CConsIts  -> (errors (t.$1)) ++ (errors (t.$2))
-                       BS.CBlock    -> errors (t.$1)                    
-                       BS.CUse      -> BS.mustBeIn (BS.lexeme t) (fromJust $ getHole t) (env t)
-                       BS.CDecl     -> BS.mustNotBeIn (BS.lexeme t,lev t) (fromJust $ getHole t) (dcli t)
+                       BS.CConsIts  -> (errors a (t.$1)) ++ (errors a (t.$2))
+                       BS.CBlock    -> errors a (t.$1)                    
+                       BS.CUse      -> mustBeIn (BS.lexeme t) (fromJust $ getHole t) (env a t) a
+                       BS.CDecl     -> mustNotBeIn (BS.lexeme t) (fromJust $ getHole t) (dcli a t) a
 
-
----- Inheritted Attributes ----
-
-dcli :: BS.AGTree B.Env 
-dcli t =  case BS.constructor t of
-                    BS.CRoot     -> []
+dcli :: BS.Env -> Zipper BS.P -> BS.Env
+dcli a t =  case BS.constructor t of
+                    BS.CRoot     -> a
                     BS.CNilIts   -> case  (BS.constructor $ parent t) of
-                                             BS.CConsIts  -> dclo (t.$<1)
-                                             BS.CBlock    -> env (parent t)
+                                             BS.CConsIts  -> dclo a (t.$<1)
+                                             BS.CBlock    -> env a (parent t)
                                              BS.CRoot     -> []
                     BS.CConsIts  -> case  (BS.constructor $ parent t) of
-                                             BS.CConsIts  -> dclo (t.$<1)
-                                             BS.CBlock    -> env (parent t)
+                                             BS.CConsIts  -> dclo a (t.$<1)
+                                             BS.CBlock    -> env a (parent t)
                                              BS.CRoot     -> []
-                    BS.CBlock    -> dcli (parent t)
-                    BS.CUse      -> dcli (parent t)
-                    BS.CDecl     -> dcli (parent t)
+                    BS.CBlock    -> dcli a (parent t)
+                    BS.CUse      -> dcli a (parent t)
+                    BS.CDecl     -> dcli a (parent t)
+
 lev :: BS.AGTree Int
 lev t =  case BS.constructor t of
                      BS.CRoot     ->  0
@@ -124,17 +123,46 @@ lev t =  case BS.constructor t of
                                         BS.CBlock    -> (lev (parent t)) + 1
                                         BS.CConsIts  -> lev (parent t)
                                         BS.CRoot     -> 0
-env :: BS.AGTree B.Env
-env t =  case BS.constructor t of
-                    BS.CRoot      ->  trace "1" $ dclo t
-                    BS.CBlock     ->  trace "2" $ env (parent t)
-                    BS.CUse       ->  trace "3" $ env (parent t)
-                    BS.CDecl      ->  trace "4" $ env (parent t)
+env :: BS.Env -> Zipper BS.P -> BS.Env
+env a t =  case BS.constructor t of
+                    BS.CRoot      ->  dclo a t
+                    BS.CBlock     ->  env a (parent t)
+                    BS.CUse       ->  env a (parent t)
+                    BS.CDecl      ->  env a (parent t)
                     _          ->  case (BS.constructor $ parent t) of
-                                                BS.CBlock    -> trace "5" $ dclo t
-                                                BS.CConsIts  -> trace "6" $ env (parent t)
-                                                BS.CRoot     -> trace "7" $ dclo t
+                                                BS.CBlock    -> dclo a t
+                                                BS.CConsIts  -> env a (parent t)
+                                                BS.CRoot     -> dclo a t
 
 
-block :: B.P -> B.Errors
-block p = errors (mkAG p)
+mustBeIn :: BS.Name -> BS.It -> BS.Env -> BS.Env -> BS.Errors
+mustBeIn n i e a = if (null (filter ((== n) . fst3) (e++a))) 
+                   then [(n, i, " <= [Undeclared use!]")] else []
+
+mustNotBeInE :: BS.Name ->  BS.It -> BS.Env -> BS.Errors
+mustNotBeInE name item e =
+    let names = map (\(name', _, _) -> name') e in
+    if (name `elem` names) then
+        [(name, item, " <= [Duplicated declaration!]")]
+    else
+        []
+
+mustNotBeInA :: BS.Name -> BS.It -> BS.Env -> BS.Errors
+mustNotBeInA name item a =
+    let items = filter (\(name', _, item') -> name' == name && item /= item') a
+        errorMsg = " <= [Different declaration!]"
+    in
+    if not (null items) then
+       [(name, item, errorMsg)]
+    else
+        []
+
+mustNotBeIn :: BS.Name -> BS.It -> BS.Env -> BS.Env -> BS.Errors
+mustNotBeIn name item e a =
+    mustNotBeInE name item e ++ mustNotBeInA name item a
+
+fst3 :: (a, b, c) -> a
+fst3 (x, _, _) = x
+
+block :: BS.Env -> BS.P -> B.Errors
+block a p = errors a (mkAG p)
