@@ -5,7 +5,6 @@ import qualified Block.Shared as B
 import qualified Block.SharedAG as BS
 import qualified IScopes as I 
 import qualified Toy_Java as TJ
---import qualified Block.Block_Zippers as M
 import Data.Data
 import Data.Generics.Zipper
 import Library.StrategicData (StrategicData(..), isJust)

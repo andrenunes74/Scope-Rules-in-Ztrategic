@@ -41,8 +41,9 @@ build' a d | I.isDecl a = B.ConsIts (B.Decl (LS.lexeme_Name a) d) (I.buildChildr
            | I.isBlock a = B.ConsIts (B.Block $ I.buildChildren build' a d) B.NilIts
            | otherwise = (I.buildChildren build' a d)
 
+--Test block translator
 main''' a = build $ mkAG a
-
+--Test block processor for Let
 main''''' a = M.block $ build $ mkAG a
-
+--Test applyDirections
 dir a b = LS.lexeme_Name $ I.applyDirections (mkAG a) b

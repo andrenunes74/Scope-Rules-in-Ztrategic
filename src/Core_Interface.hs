@@ -55,8 +55,9 @@ build' a d | I.isDecl a = case (S.constructor a) of
            | I.isBlock a = B.ConsIts (B.Block (I.buildChildren build' a d)) B.NilIts
            | otherwise = (I.buildChildren build' a d)
 
-main'' a = M.block $ build $ mkAG a
-
+--Test block translator
 main'''' a = build $ mkAG a
-
+--Test block processor for toy_C
+main'' a = M.block $ build $ mkAG a
+--Test applyDirections
 dir' a b = S.lexeme $ I.applyDirections (mkAG a) b

@@ -78,6 +78,3 @@ applyErrors ag e = do
 applyErrors' :: Scopes a => Zipper a -> [(B.Directions,String)] -> Zipper a
 applyErrors' ag [] = ag 
 applyErrors' ag ((a,b): t) = applyErrors' (mkAG $ fromZipper $ (modifyZipperAlongPath ag a b)) t
-
-
---declarações globais, env para dg, dcli root = env dg
