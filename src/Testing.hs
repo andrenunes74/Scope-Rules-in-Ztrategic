@@ -18,10 +18,17 @@ treeT2 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
             (C.ConsIts (C.Decl "a" (C.Const 100))
             (C.ConsIts (C.Decl "x" (C.Var "a")) C.NilIts)))
 
+{-
+def count25 () {
+  counter = 0
+  while (counter < 5)
+    counter++
+}
+-}
 treeT3 = C.OpenFuncao (C.DefFuncao (C.Name "count25") C.NilIts
             (C.ConsIts (C.Decl "counter" (C.Const 0))
-            (C.ConsIts (C.NestedWhile (C.While ((C.Less (C.Var "counter1") (C.Const 5)))
-                                    (C.ConsIts (C.Increment (C.Var "counter3"))
+            (C.ConsIts (C.NestedWhile (C.While ((C.Less (C.Var "counter") (C.Const 5)))
+                                    (C.ConsIts (C.Increment (C.Var "counter"))
                                     C.NilIts)))
             C.NilIts)))
 
@@ -70,12 +77,12 @@ treeL1 = L.Let ( L.Assign "w" (L.Add (L.Var "b") (L.Const (-16)))
 --test_same (h:t) = (main' h == (main'' h)) : test_same t
 
 -- Test the new block with paths
-test_core = main'''' treeT8
+test_core = main'''' treeT3
 test_let = main''' treeL1
 
 -- Tests block processor on Let and Core
 test_letP = main''''' treeL1
-test_coreP = main'' treeT8
+test_coreP = main'' treeT3
 
 -- Test apply directions on Let -> "a"
 test_dir_let = dir treeL1 [B.D,B.D,B.R,B.D,B.R,B.D,B.D,B.D,B.D]
@@ -85,4 +92,4 @@ test_dir_core = dir' treeT8 [B.D,B.D,B.R,B.R,B.D,B.R,B.D]
 
 -- Test block processor on Let and Core with PP
 test = fromZipper $ I.applyErrors (toZipper treeL1) (test_letP)
-test2 = fromZipper $ I.applyErrors (toZipper treeT8) (test_coreP)
+test2 = fromZipper $ I.applyErrors (toZipper treeT3) (test_coreP)
