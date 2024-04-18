@@ -50,14 +50,12 @@ build a = B.Root (I.buildChildren build' a [])
 
 build' :: I.Scopes a => Zipper a -> B.Directions -> B.Its
 build' a d | I.isDecl a = case (TJ.constructor a) of
-                        TJ.CDecl -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d)
-                        TJ.CDefFuncao -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d)
                         TJ.CVar -> B.ConsIts (B.Decl (TJ.lexeme a) d) B.NilIts
                         TJ.CDefClass -> B.ConsIts (B.Block (B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d))) B.NilIts
+                        _ -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d)
            | I.isUse a = case (TJ.constructor a) of
-                       TJ.CVar -> B.ConsIts (B.Use (TJ.lexeme a) d) B.NilIts
                        TJ.CFuncao -> B.ConsIts (B.Use (TJ.lexeme a) d) (I.buildChildren build' a d)
-                       TJ.CClass -> B.ConsIts (B.Use (TJ.lexeme a) d) B.NilIts
+                       _ -> B.ConsIts (B.Use (TJ.lexeme a) d) B.NilIts
            | I.isBlock a = B.ConsIts (B.Block (I.buildChildren build' a d)) B.NilIts
            | otherwise = (I.buildChildren build' a d)
 

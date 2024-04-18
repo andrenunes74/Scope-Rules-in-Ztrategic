@@ -82,7 +82,7 @@ test_let = main''' treeL1
 
 -- Tests block processor on Let and Core
 test_letP = main''''' treeL1
-test_coreP = main'' treeT3
+test_coreP = main'' treeT8
 
 -- Test apply directions on Let -> "a"
 test_dir_let = dir treeL1 [B.D,B.D,B.R,B.D,B.R,B.D,B.D,B.D,B.D]
