@@ -50,7 +50,7 @@ build a = B.Root (I.buildChildren build' a [])
 
 build' :: I.Scopes a => Zipper a -> B.Directions -> B.Its
 build' a d | I.isDecl a = case (TJ.constructor a) of
-                        TJ.CVar -> B.ConsIts (B.Decl (TJ.lexeme a) d) B.NilIts
+                        TJ.CVar -> B.ConsIts (B.Decl (TJ.lexeme a) d) B.NilIts 
                         TJ.CDefClass -> B.ConsIts (B.Block (B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d))) B.NilIts
                         _ -> B.ConsIts (B.Decl (TJ.lexeme a) d) (I.buildChildren build' a d)
            | I.isUse a = case (TJ.constructor a) of

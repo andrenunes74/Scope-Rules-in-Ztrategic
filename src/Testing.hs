@@ -63,6 +63,14 @@ treeT8 = C.OpenFuncao (C.DefFuncao (C.Name "main") C.NilIts
             (C.ConsIts (C.NestedWhile (C.While (C.Less (C.Var "e") (C.Const 200)) (C.ConsIts (C.Increment (C.Var "x")) C.NilIts)))
             C.NilIts)))))
 
+{-
+let w = b + -16
+    a = 8
+    w = let z = a + b
+        in z + b
+    b = c + 3 - c
+in c + a - w
+-}
 treeL1 = L.Let ( L.Assign "w" (L.Add (L.Var "b") (L.Const (-16)))
            $ L.Assign "a" (L.Const 8)
            $ L.NestedLet "w" ( L.Let (L.Assign "z" (L.Add (L.Var "a") (L.Var "b")) L.EmptyList)

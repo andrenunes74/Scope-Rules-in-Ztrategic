@@ -12,10 +12,10 @@ import qualified Library.StrategicData as S (StrategicData(..), isJust, left, ri
 import qualified Block.Shared as B
 
 class (Typeable a, S.StrategicData a, Data a) => Scopes a where
-    isDecl :: (Typeable a, S.StrategicData a) => Zipper a -> Bool
-    isUse :: (Typeable a, S.StrategicData a) => Zipper a -> Bool
-    isBlock :: (Typeable a, S.StrategicData a) => Zipper a -> Bool
-    isGlobal :: (Typeable a, S.StrategicData a) => Zipper a -> Bool
+    isDecl :: Zipper a -> Bool
+    isUse :: Zipper a -> Bool
+    isBlock :: Zipper a -> Bool
+    isGlobal :: Zipper a -> Bool
 
 mergeIts :: B.Its -> B.Its -> B.Its
 mergeIts (B.NilIts) its = its
@@ -44,6 +44,12 @@ applyDirections ag (h:t)  | h == B.D = case S.down' ag of
                                         Nothing -> error "Can't go there!"
                                         Just n -> applyDirections n t 
                           | h == B.R = case S.right ag of 
+                                        Nothing -> error "Can't go there!"
+                                        Just n -> applyDirections n t 
+                          | h == B.L = case S.left ag of 
+                                        Nothing -> error "Can't go there!"
+                                        Just n -> applyDirections n t 
+                          | h == B.U = case S.up ag of 
                                         Nothing -> error "Can't go there!"
                                         Just n -> applyDirections n t 
 

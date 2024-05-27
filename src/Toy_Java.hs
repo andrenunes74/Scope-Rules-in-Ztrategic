@@ -6,38 +6,33 @@ import Data.Generics.Zipper
 
 {- 
 Class Class1 {
-        Global x = 5 
-        Global def func () {
-                d = 100
-                x = a + x
-        }
+        Class2 a
+}
+
+Class Class1 {
+        Class2 b      
 }
 
 Class Class2 {
-        Class1 x
+        Class1 c      
 }
+
 -}
 
 rootInstance = (ConsIts 
                     (DefClass "Class1" 
-                        (ConsIts (Global (Decl "x" (Const 5))) 
-                            (ConsIts 
-                                (Global (DefFuncao "func" NilIts
-                                    (ConsIts 
-                                        (Decl "d" (Const 100))
-                                        (ConsIts 
-                                            (Decl "x" (Add (Var "a") (Var "x"))) 
-                                            NilIts
-                                        )
-                                    )))
-                                NilIts)
-                        ) 
+                        (ConsIts (Class "Class2" (Decl "a" (Var ""))) NilIts)   
                     ) 
                     (ConsIts 
-                        (DefClass "Class2" 
-                            (ConsIts (Class "Class1" (Decl "x" (Var ""))) NilIts)
+                        (DefClass "Class1" 
+                            (ConsIts (Class "Class2" (Decl "b" (Var ""))) NilIts)
                         ) 
-                        NilIts))
+                        
+                    (ConsIts 
+                        (DefClass "Class2" 
+                            (ConsIts (Class "Class1" (Decl "c" (Var ""))) NilIts)
+                        ) 
+                        NilIts)))
 
 data Exp = Add Exp Exp
          | Sub Exp Exp
