@@ -11,6 +11,7 @@ import Library.ZipperAG
 
 import IScopes
 import Block.Shared
+import Block.Block_Zippers
 
 -- import GeneratedAG
 import Data.Maybe (isJust)
@@ -32,8 +33,27 @@ instance Scopes HsModule where
     isUse t = case constructor t of 
                 CHsVar -> True 
                 _ -> False   
-    isBlock _ = False 
+    isBlock t = case constructor t of 
+                -- let expression
+                CHsLet          -> True
+                -- any right-hand side. This covers functions 
+                CHsGuardedRhss  -> True
+                CHsUnGuardedRhs -> True
+                -- patterns in a case expression
+                CHsAlt          -> True
+                _ -> False  
     isGlobal _ = False 
+
+useToStr :: Zipper a -> String 
+useToStr t = case constructor t of
+                CHsVar -> case lexeme_HsVar t of 
+                    Qual _ (HsIdent s) -> s
+                    UnQual (HsIdent s) -> s 
+
+declToStr :: Zipper a -> String 
+declToStr t = case constructor t of 
+                CHsPVar -> case lexeme_HsPVar t of 
+                    HsIdent s -> s 
 
 
 build :: Scopes a => Zipper a -> P
@@ -45,26 +65,25 @@ build' a d | isDecl a = ConsIts (Decl (declToStr a) d) (buildChildren build' a d
            | isBlock a = ConsIts (Block $ buildChildren build' a d) NilIts
            | otherwise = buildChildren build' a d
 
-useToStr :: Zipper a -> String 
-useToStr t = case constructor t of 
-                CHsVar -> case lexeme_HsVar t of 
-                    Qual _ (HsIdent s) -> s
-                    UnQual (HsIdent s) -> s 
-
-declToStr :: Zipper a -> String 
-declToStr t = case constructor t of 
-                CHsPVar -> case lexeme_HsPVar t of 
-                    HsIdent s -> s 
 
 -----
 -----
 -----
 
+errorsExample :: String -> Errors 
+errorsExample = block . runExample
 
+runExample :: String -> P
+runExample = build . toZipper . parse  
 
-parseExample = case parseModule example1 of 
+parse :: String -> HsModule
+parse s = case parseModule s of 
                 ParseOk x -> x 
                 err -> error $ show err
+
+
+parseExample  = runExample example1
+parseExample2 = runExample example2
 
 example1_ = putStrLn example1
 example1 = "\
@@ -79,3 +98,12 @@ f1 = let x = 1
          y = 2 
          z = x 
      in z
+
+-- try adding Prelude directly so that build+env can find it
+example2 = "\
+\module Example where \n\
+\import Language.Haskell.Parser \n\
+\parseExample = case parseModule example2 of \n\
+\                ParseOk x -> x \n\
+\                err -> error $ show err\n\
+\"
