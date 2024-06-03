@@ -5,6 +5,7 @@ module AGMaker.AGMaker where
 import Language.Haskell.TH
 import Control.Monad (forM, replicateM, foldM, liftM2)
 import Data.List (isPrefixOf, intersperse)
+import Data.Data
 
 import Debug.Trace
 
@@ -197,12 +198,13 @@ defaultFailureExp agArg = do
     let x_name = mkName "x"
         failCase =  [match (varP x_name) (normalB (appE (varE $ mkName "error") (infixE (Just $ litE (stringL "error in constructor ")) (varE $ mkName "++") (Just $ varE x_name)))) []]
     -- failCase =  [match (wildP) (normalB (appE (varE $ mkName "error") (litE (stringL "error in constructor")))) []]
-    caseE [|query (\x -> tyconUQname (dataTypeName (dataTypeOf x))) $(varE agArg)|] $ 
+    caseE [|query nameOfData $(varE agArg)|] $ 
             map (\(defname, ourname) -> 
                 match (litP (stringL defname)) (normalB (conE $ makeCFromStr ourname)) [])
                   extraTypes ++ failCase
                   
 
-
+nameOfData :: Data a => a -> String
+nameOfData x = tyconUQname (dataTypeName (dataTypeOf x))
 
     

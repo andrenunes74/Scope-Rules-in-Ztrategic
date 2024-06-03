@@ -7,7 +7,6 @@ import Data.Generics.Zipper
 
 import Library.StrategicData (StrategicData(..))
 import AGMaker.AGMaker 
-import Library.ZipperAG
 
 import IScopes
 import Block.Shared
@@ -15,9 +14,6 @@ import Block.Block_Zippers
 
 -- import GeneratedAG
 import Data.Maybe (isJust)
-
-import Data.Data
-
 
 -- makeAG ''HsModule
 writeAG ''HsModule 
