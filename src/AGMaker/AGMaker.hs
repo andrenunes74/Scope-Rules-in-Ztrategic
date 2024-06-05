@@ -51,7 +51,7 @@ typeToName x            = error $ "Unhandled constructor " ++ show x ++ " in fun
 writeAG n = do 
     ags <- makeAG n 
     let s = pprint ags
-    runIO $ writeFile "GeneratedAG.hs" $ "{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}\n{-# HLINT ignore \"Redundant lambda\" #-}\n{-# HLINT ignore \"Redundant bracket\" #-}\n{-# HLINT ignore \"Use camelCase\" #-}\n{-# HLINT ignore \"Avoid lambda\" #-}\nmodule GeneratedAG where\n\nimport Data.Data\nimport Data.Generics.Zipper\nimport " ++ init (stripPrefix n) ++ "\n\n" ++ s 
+    runIO $ writeFile "GeneratedAG.hs" $ "{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}\n{-# HLINT ignore \"Redundant lambda\" #-}\n{-# HLINT ignore \"Redundant bracket\" #-}\n{-# HLINT ignore \"Use camelCase\" #-}\n{-# HLINT ignore \"Avoid lambda\" #-}\nmodule GeneratedAG where\n\nimport AGMaker.AGMaker (nameOfData)\nimport Data.Generics.Zipper\nimport " ++ init (stripPrefix n) ++ "\n\n" ++ s 
     return ags 
 
 
@@ -146,7 +146,7 @@ recCalls prefix done (h:t) = do
 makeConstructorDatatype pairs =
     let names = concatMap (map fst . snd) pairs
         constructorsOfNames = map (\n -> NormalC (makeC n) []) names
-        primitives = map (\n -> NormalC (makeCFromStr n) []) ["PrimitiveInt", "PrimitiveBool", "PrimitiveString", "PrimitiveList", "PrimitiveMaybe"]
+        primitives = map (\(_, n) -> NormalC (makeCFromStr n) []) extraTypes
         allConstructors = constructorsOfNames ++ primitives
     in DataD [] (mkName "Constructor") [] Nothing allConstructors [] -- last parameter is deriving clauses, consider adding Show
 
@@ -178,6 +178,7 @@ defaultTypes = [("String", "PrimitiveString"),
                 ]
 -}
 extraTypes = [  ("String", "PrimitiveString"), 
+                ("Char", "PrimitiveChar"),
                 ("Bool", "PrimitiveBool"), 
                 ("Integer", "PrimitiveInt"), 
                 ("Maybe", "PrimitiveMaybe"), 
