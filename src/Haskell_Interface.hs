@@ -3,24 +3,19 @@ module Haskell_Interface where
 
 import Language.Haskell.Syntax
 import Language.Haskell.Parser
+
 import Data.Generics.Zipper
-
-import Library.StrategicData (StrategicData(..))
 import AGMaker.AGMaker 
-
 import IScopes
-import Block.Shared
-import Block.Block_Zippers
 
 -- import GeneratedAG
 import Data.Maybe (isJust)
 
--- makeAG ''HsModule
-writeAG ''HsModule 
+makeAG ''HsModule
+-- writeAG ''HsModule 
 
 instance StrategicData HsModule where 
-    isTerminal t = isJust (getHole t :: Maybe Int)
-                || isJust (getHole t :: Maybe String)
+    isTerminal t = isJust (getHole t :: Maybe SrcLoc)
 
 instance Scopes HsModule where 
     isDecl t = case constructor t of 
@@ -38,39 +33,24 @@ instance Scopes HsModule where
                 -- patterns in a case expression
                 CHsAlt          -> True
                 _ -> False  
-    isGlobal _ = False 
-
-useToStr :: Zipper a -> String 
-useToStr t = case constructor t of
+    getUse t = case constructor t of
                 CHsVar -> case lexeme_HsVar t of 
                     Qual _ (HsIdent s) -> s
                     UnQual (HsIdent s) -> s 
-
-declToStr :: Zipper a -> String 
-declToStr t = case constructor t of 
+    getDecl t = case constructor t of 
                 CHsPVar -> case lexeme_HsPVar t of 
                     HsIdent s -> s 
 
 
-build :: Scopes a => Zipper a -> P
-build a = Root (buildChildren build' a [])
-
-build' :: Scopes a => Zipper a -> Directions -> Its
-build' a d | isDecl a = ConsIts (Decl (declToStr a) d) (buildChildren build' a d)
-           | isUse a = ConsIts (Use (useToStr a) d) (buildChildren build' a d)
-           | isBlock a = ConsIts (Block $ buildChildren build' a d) NilIts
-           | otherwise = buildChildren build' a d
-
-
 -----
 -----
 -----
 
-errorsExample :: String -> Errors 
-errorsExample = block . runExample
+errorsExample :: String -> Errors
+errorsExample = toErrors . parse
 
 runExample :: String -> P
-runExample = build . toZipper . parse  
+runExample = toBlock . parse 
 
 parse :: String -> HsModule
 parse s = case parseModule s of 

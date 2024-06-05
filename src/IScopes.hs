@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module IScopes where
-import Data.Data
+module IScopes (Scopes(..), build, toBlock, toErrors, B.Errors, B.P, S.StrategicData(..)) where
+import Data.Data ( Data, Typeable )
 import Data.Generics.Zipper
 import Library.Ztrategic
 import Data.Generics.Aliases
@@ -10,15 +10,42 @@ import Data.Maybe
 import Debug.Trace
 import qualified Library.StrategicData as S (StrategicData(..), isJust, left, right, up, down') 
 import qualified Block.Shared as B
+import qualified Block.Block_Zippers as BZ
+
 
 class (Typeable a, S.StrategicData a, Data a) => Scopes a where
     isDecl :: Zipper a -> Bool
     isUse :: Zipper a -> Bool
     isBlock :: Zipper a -> Bool
     isGlobal :: Zipper a -> Bool
+    isGlobal _ = False 
+    getUse :: Zipper a -> String 
+    getUse _ = undefined -- TODO code to find first string 
+    getDecl :: Zipper a -> String
+    getDecl _ = undefined -- TODO code to find first string 
+    -- setUse & setDecl? Do they need to keep the zipper position after modification??
+
+
+toBlock :: Scopes a => a -> B.P
+toBlock = build . toZipper 
+
+toErrors :: Scopes a => a -> B.Errors
+toErrors = BZ.block . build . toZipper
+
+build :: Scopes a => Zipper a -> B.P
+build a = B.Root (buildChildren build' a [])
+
+build' :: Scopes a => Zipper a -> B.Directions -> B.Its
+build' a d | isDecl a = B.ConsIts (B.Decl (getDecl a) d) (buildChildren build' a d)
+           | isUse a = B.ConsIts (B.Use (getUse a) d) (buildChildren build' a d)
+           | isBlock a = B.ConsIts (B.Block $ buildChildren build' a d) B.NilIts
+           | otherwise = buildChildren build' a d
+
 
 mergeIts :: B.Its -> B.Its -> B.Its
 mergeIts (B.NilIts) its = its
+-- clean empty blocks
+mergeIts (B.ConsIts (B.Block B.NilIts) xs) its = mergeIts xs its
 mergeIts (B.ConsIts x xs) its = B.ConsIts x (mergeIts xs its)
 
 children :: Scopes a => (Zipper a -> B.Directions -> B.Its) -> Zipper a -> B.Directions -> [B.Its]
