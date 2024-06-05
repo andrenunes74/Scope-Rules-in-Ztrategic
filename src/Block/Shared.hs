@@ -50,8 +50,12 @@ showIts NilIts              = ""
 instance Show It where
   show = showIt
 
-showIt (Decl s d) = "(Decl " ++ s ++ " | Path: " ++ show d ++ ")"
-showIt (Use s d) = "(Use " ++ s ++ " | Path: " ++ show d ++ ")"
+showItP (Decl s d) = "(Decl " ++ s ++ " | Path: " ++ show d ++ ")"
+showItP (Use s d) = "(Use " ++ s ++ " | Path: " ++ show d ++ ")"
+showItP (Block its) = "[ " ++ showIts its ++ " ]"
+
+showIt (Decl s d) = "Decl " ++ s 
+showIt (Use s d) = "Use " ++ s
 showIt (Block its) = "[ " ++ showIts its ++ " ]"
 
 type Env    = [(Name, Int, It)]
@@ -61,7 +65,7 @@ mustBeIn :: Name -> It -> Env -> Errors
 mustBeIn n i e = if null (filter ((== n) . fst3) e) then [(n, i, " <= [Undeclared use!]")] else []
 
 mustNotBeIn :: (Name, Int) -> It -> Env -> Errors
-mustNotBeIn p@(name, _) i e = if p `elem` map (\(name', _, _) -> (name', 0)) e then [(name, i, " <= [Duplicated declaration!]")] else []
+mustNotBeIn p@(name, _) i e = if p `elem` map (\(name', level, _) -> (name', level)) e then [(name, i, " <= [Duplicated declaration!]")] else []
 
 fst3 :: (a, b, c) -> a
 fst3 (x, _, _) = x
