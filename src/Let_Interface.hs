@@ -32,18 +32,9 @@ instance StrategicData (L.Let) where
     isTerminal t = isJust (getHole t :: Maybe Int)
                 || isJust (getHole t :: Maybe LS.Name)
 
-build :: I.Scopes a => Zipper a -> B.P
-build a = B.Root (I.buildChildren build' a [])
-
-build' :: I.Scopes a => Zipper a -> B.Directions -> B.Its
-build' a d | I.isDecl a = B.ConsIts (B.Decl (LS.lexeme_Name a) d) (I.buildChildren build' a d)
-           | I.isUse a = B.ConsIts (B.Use (LS.lexeme_Name a) d) (I.buildChildren build' a d)
-           | I.isBlock a = B.ConsIts (B.Block $ I.buildChildren build' a d) B.NilIts
-           | otherwise = (I.buildChildren build' a d)
-
 --Test block translator
-main''' a = build $ mkAG a
+main''' a = I.build $ mkAG a
 --Test block processor for Let
-main''''' a = M.block $ build $ mkAG a
+main''''' a = M.block $ I.build $ mkAG a
 --Test applyDirections
 dir a b = LS.lexeme_Name $ I.applyDirections (mkAG a) b

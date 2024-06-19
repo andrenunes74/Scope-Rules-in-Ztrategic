@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module IScopes (Scopes(..), build, toBlock, toErrors, B.Errors, B.P, S.StrategicData(..)) where
+module IScopes (Scopes(..), applyErrors, applyDirections, build, toBlock, toErrors, B.Errors, B.P, S.StrategicData(..)) where
 import Data.Data ( Data, Typeable )
 import Data.Generics.Zipper
 import Library.Ztrategic
@@ -20,11 +20,11 @@ class (Typeable a, S.StrategicData a, Data a) => Scopes a where
     isGlobal :: Zipper a -> Bool
     isGlobal _ = False 
     getUse :: Zipper a -> String 
-    getUse _ = undefined -- TODO code to find first string 
+    getUse a = getString a
     getDecl :: Zipper a -> String
-    getDecl _ = undefined -- TODO code to find first string 
-    -- setUse & setDecl? Do they need to keep the zipper position after modification??
-
+    getDecl a = getString a
+    initialState :: a -> [String]
+    initialState = const []
 
 toBlock :: Scopes a => a -> B.P
 toBlock = build . toZipper 
@@ -96,6 +96,20 @@ aux ag s = case right ag of
   Just n -> case (getHole n :: Maybe String) of
                 Just holeString -> setHole (holeString ++ s) n
                 Nothing -> aux n s
+
+getString :: Scopes a => Zipper a -> String
+getString ag = case down' ag of 
+  Nothing -> error "Error going down on getString"
+  Just n -> case (getHole n :: Maybe String) of
+                Just holeString -> holeString
+                Nothing -> getString' n
+
+getString' :: Scopes a => Zipper a -> String
+getString' ag = case right ag of 
+  Nothing -> error "Error going right on getString"
+  Just n -> case (getHole n :: Maybe String) of
+                Just holeString -> holeString
+                Nothing -> getString' n
 
 dirs :: B.Errors -> [(B.Directions,String)] 
 dirs [] = []

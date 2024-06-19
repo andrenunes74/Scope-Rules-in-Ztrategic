@@ -36,25 +36,18 @@ instance I.Scopes (C.Item) where
         S.CLet -> True
         _ -> False
     isGlobal ag = False
+    getDecl a = S.lexeme a
+    getUse a = S.lexeme a
 
 instance StrategicData (C.Item) where
   isTerminal t = isJust (getHole t :: Maybe Int)
               || isJust (getHole t :: Maybe String)
               || isJust (getHole t :: Maybe Bool)
-        
-build :: I.Scopes a => Zipper a -> B.P
-build a = B.Root (I.buildChildren build' a [])
-
-build' :: I.Scopes a => Zipper a -> B.Directions -> B.Its
-build' a d | I.isDecl a = B.ConsIts (B.Decl (S.lexeme a) d) (I.buildChildren build' a d)
-           | I.isUse a = B.ConsIts (B.Use (S.lexeme a) d) (I.buildChildren build' a d)
-           | I.isBlock a = B.ConsIts (B.Block (I.buildChildren build' a d)) B.NilIts
-           | otherwise = (I.buildChildren build' a d)
 
 --Test block translator
-main'''' a = build $ mkAG a
+main'''' a = I.build $ mkAG a
 --Test block processor for toy_C
-main'' a = block $ build $ mkAG a
+main'' a = block $ I.build $ mkAG a
 --Test applyDirections
 dir' a b = S.lexeme $ I.applyDirections (mkAG a) b
 
