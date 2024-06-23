@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module IScopes (Scopes(..), string2Env, buildChildren, applyErrors, applyDirections, build, toBlock, toErrors, B.Errors, B.P, S.StrategicData(..)) where
+module IScopes (Scopes(..), string2Env, buildChildren, applyErrors, applyDirections, build, toBlock, B.Errors, B.P, S.StrategicData(..)) where
 import Data.Data ( Data, Typeable )
 import Data.Generics.Zipper
 import Library.Ztrategic
@@ -28,9 +28,6 @@ class (Typeable a, S.StrategicData a, Data a) => Scopes a where
 
 toBlock :: Scopes a => a -> B.P
 toBlock = build . toZipper 
-
-toErrors :: Scopes a => a -> B.Errors
-toErrors = BZ.block . build . toZipper
 
 build :: Scopes a => Zipper a -> B.P
 build a = B.Root (buildChildren build' a [])

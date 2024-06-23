@@ -39,7 +39,7 @@ instance I.Scopes (TJ.Items) where
         TJ.CGlobal -> True
         TJ.CDefClass -> True
         _ -> False
-    initialState ag = ["b", "a"]
+    initialState ag = []
 
 instance StrategicData (TJ.Items) where
   isTerminal t = isJust (getHole t :: Maybe Int)
