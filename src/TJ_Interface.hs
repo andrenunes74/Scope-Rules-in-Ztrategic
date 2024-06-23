@@ -39,6 +39,7 @@ instance I.Scopes (TJ.Items) where
         TJ.CGlobal -> True
         TJ.CDefClass -> True
         _ -> False
+    initialState ag = ["b", "a"]
 
 instance StrategicData (TJ.Items) where
   isTerminal t = isJust (getHole t :: Maybe Int)
@@ -73,7 +74,7 @@ main a = build $ mkAG a
 --Test global vars colector
 main' a = globals' $ mkAG a
 --Test block processor for toy_java
-main'' a = block (env [] (mkAG $ globals' $ mkAG a)) (build $ mkAG a)
+main'' a = block (env (I.string2Env (I.initialState a)) (mkAG $ globals' $ mkAG a)) (build $ mkAG a)
 --Test global vars env colector
 main''' a = (env [] (mkAG $ globals' $ mkAG a))
 

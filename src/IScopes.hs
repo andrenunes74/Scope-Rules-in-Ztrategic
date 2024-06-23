@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module IScopes (Scopes(..), applyErrors, applyDirections, build, toBlock, toErrors, B.Errors, B.P, S.StrategicData(..)) where
+module IScopes (Scopes(..), string2Env, buildChildren, applyErrors, applyDirections, build, toBlock, toErrors, B.Errors, B.P, S.StrategicData(..)) where
 import Data.Data ( Data, Typeable )
 import Data.Generics.Zipper
 import Library.Ztrategic
@@ -125,3 +125,7 @@ applyErrors ag e = do
 applyErrors' :: Scopes a => Zipper a -> [(B.Directions,String)] -> Zipper a
 applyErrors' ag [] = ag 
 applyErrors' ag ((a,b): t) = applyErrors' (mkAG $ fromZipper $ (modifyZipperAlongPath ag a b)) t
+
+string2Env :: [String] -> B.Env
+string2Env [] = []
+string2Env (h:t) = (h,0,B.Decl h []) : string2Env t
