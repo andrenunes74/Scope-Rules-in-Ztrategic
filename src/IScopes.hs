@@ -18,10 +18,14 @@ class (Typeable a, S.StrategicData a, Data a) => Scopes a where
     isBlock :: Zipper a -> Bool
     isGlobal :: Zipper a -> Bool
     isGlobal _ = False 
-    getUse :: Zipper a -> String 
+    getUse :: Zipper a -> String
     getUse a = getString a
     getDecl :: Zipper a -> String
     getDecl a = getString a
+    setUse :: Zipper a -> String -> Zipper a
+    setUse a b = modifyFunc a b
+    setDecl :: Zipper a -> String-> Zipper a
+    setDecl a b = modifyFunc a b
     initialState :: a -> [String]
     initialState = const []
 
