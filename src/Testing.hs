@@ -1,8 +1,8 @@
 module Testing where
 import Scopes
 --import ToBlock
-import Core_Interface
-import Let_Interface
+import qualified Core_Interface as CI
+import qualified Let_Interface as LI
 import qualified Core as C
 import qualified Let.Shared as L 
 import qualified Block.Shared as B
@@ -85,18 +85,18 @@ treeL1 = L.Let ( L.Assign "w" (L.Add (L.Var "b") (L.Const (-16)))
 --test_same (h:t) = (main' h == (main'' h)) : test_same t
 
 -- Test the new block with paths
-test_core = main'''' treeT3
-test_let = main''' treeL1
+test_core = CI.toBlock treeT3
+test_let = LI.toBlock treeL1
 
 -- Tests block processor on Let and Core
-test_letP = main''''' treeL1
-test_coreP = main'' treeT8
+test_letP = LI.doAllThings treeL1
+test_coreP = CI.doAllThings treeT8
 
 -- Test apply directions on Let -> "a"
-test_dir_let = dir treeL1 [B.D,B.D,B.R,B.D,B.R,B.D,B.D,B.D,B.D]
+test_dir_let = LI.dir treeL1 [B.D,B.D,B.R,B.D,B.R,B.D,B.D,B.D,B.D]
 
 -- Test apply directions on Core -> "b"
-test_dir_core = dir' treeT8 [B.D,B.D,B.R,B.R,B.D,B.R,B.D]
+test_dir_core = CI.dir' treeT8 [B.D,B.D,B.R,B.R,B.D,B.R,B.D]
 
 -- Test block processor on Let and Core with PP
 test = fromZipper $ I.applyErrors (toZipper treeL1) (test_letP)

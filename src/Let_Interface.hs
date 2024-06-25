@@ -35,9 +35,9 @@ instance StrategicData (L.Let) where
                 || isJust (getHole t :: Maybe LS.Name)
 
 --Test block translator
-main''' a = I.build $ mkAG a
+toBlock a = I.build $ mkAG a
 --Test block processor for Let
-main''''' a = block (env (I.string2Env (I.initialState a)) (mkAG $ BS.Root BS.NilIts)) (I.build $ mkAG a)
+doAllThings a = block (I.string2Env (I.initialState a)) (I.build $ mkAG a)
 --Test applyDirections
 dir a b = LS.lexeme_Name $ I.applyDirections (mkAG a) b
 
@@ -45,7 +45,7 @@ dir a b = LS.lexeme_Name $ I.applyDirections (mkAG a) b
 -- ALGOL 68 block processor
 ----------------------------------------------------------------------------------------------------------------------------------------------
 dclo :: BS.Env -> Zipper BS.P -> BS.Env
-dclo a t =  case BS.constructor t of
+dclo a t = case BS.constructor t of
                     BS.CNilIts   -> dcli a t
                     BS.CConsIts  -> dclo a (t.$2)
                     BS.CDecl     -> (BS.lexeme t,lev t, (fromJust $ getHole t)) : (dcli a t)
@@ -126,4 +126,4 @@ fst3 :: (a, b, c) -> a
 fst3 (x, _, _) = x
 
 block :: BS.Env -> BS.P -> B.Errors
-block a p = errors a (mkAG p)
+block a p = errors (a) (mkAG p)

@@ -39,7 +39,7 @@ instance I.Scopes (TJ.Items) where
         TJ.CGlobal -> True
         TJ.CDefClass -> True
         _ -> False
-    initialState ag = []
+    initialState ag = ["Class2"]
 
 instance StrategicData (TJ.Items) where
   isTerminal t = isJust (getHole t :: Maybe Int)
@@ -70,13 +70,11 @@ globals a d | I.isGlobal a = case (TJ.constructor a) of
             | otherwise = (I.buildChildren globals a d)
 
 --Test block translator
-main a = build $ mkAG a
+toBlock a = build $ mkAG a
 --Test global vars colector
-main' a = globals' $ mkAG a
+getGlobals a = globals' $ mkAG a
 --Test block processor for toy_java
-main'' a = block (env (I.string2Env (I.initialState a)) (mkAG $ globals' $ mkAG a)) (build $ mkAG a)
---Test global vars env colector
-main''' a = (env [] (mkAG $ globals' $ mkAG a))
+doAllThings a = block ((env [] (mkAG $ globals' $ mkAG a))++(I.string2Env (I.initialState a))) (build $ mkAG a)
 
 ----------------------------------------------------------------------------------------------------------------------------------------------
 -- Object oriented block processor
@@ -135,7 +133,6 @@ env a t =  case BS.constructor t of
                                                 BS.CBlock    -> dclo a t
                                                 BS.CConsIts  -> env a (parent t)
                                                 BS.CRoot     -> dclo a t
-
 
 mustBeIn :: BS.Name -> BS.It -> BS.Env -> BS.Env -> BS.Errors
 mustBeIn n i e a = if (null (filter ((== n) . fst3) (e++a))) 

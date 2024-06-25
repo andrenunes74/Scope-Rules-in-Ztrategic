@@ -38,6 +38,7 @@ instance I.Scopes (C.Item) where
     isGlobal ag = False
     getDecl a = S.lexeme a
     getUse a = S.lexeme a
+    initialState ag = ["e"]
 
 instance StrategicData (C.Item) where
   isTerminal t = isJust (getHole t :: Maybe Int)
@@ -45,9 +46,9 @@ instance StrategicData (C.Item) where
               || isJust (getHole t :: Maybe Bool)
 
 --Test block translator
-main'''' a = I.build $ mkAG a
+toBlock a = I.build $ mkAG a
 --Test block processor for Core
-main'' a = block (env (I.string2Env (I.initialState a)) (mkAG $ BS.Root BS.NilIts)) (I.build $ mkAG a)
+doAllThings a = block (I.string2Env (I.initialState a)) (I.build $ mkAG a)
 --Test applyDirections
 dir' a b = S.lexeme $ I.applyDirections (mkAG a) b
 
@@ -108,7 +109,6 @@ env a t =  case BS.constructor t of
                                                 BS.CBlock    -> dclo a t
                                                 BS.CConsIts  -> env a (parent t)
                                                 BS.CRoot     -> dclo a t
-
 
 mustBeIn :: BS.Name -> BS.It -> BS.Env -> BS.Env -> BS.Errors
 mustBeIn n i e a = if (null (filter ((== n) . fst3) (e++a))) 

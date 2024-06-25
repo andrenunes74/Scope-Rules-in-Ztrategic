@@ -12,7 +12,6 @@ import qualified Library.StrategicData as S (StrategicData(..), isJust, left, ri
 import qualified Block.Shared as B
 import qualified Block.Block_Zippers as BZ
 
-
 class (Typeable a, S.StrategicData a, Data a) => Scopes a where
     isDecl :: Zipper a -> Bool
     isUse :: Zipper a -> Bool
@@ -37,7 +36,6 @@ build' a d | isDecl a = B.ConsIts (B.Decl (getDecl a) d) (buildChildren build' a
            | isUse a = B.ConsIts (B.Use (getUse a) d) (buildChildren build' a d)
            | isBlock a = B.ConsIts (B.Block $ buildChildren build' a d) B.NilIts
            | otherwise = buildChildren build' a d
-
 
 mergeIts :: B.Its -> B.Its -> B.Its
 mergeIts (B.NilIts) its = its
