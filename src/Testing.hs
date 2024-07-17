@@ -78,25 +78,10 @@ treeL1 = L.Let ( L.Assign "w" (L.Add (L.Var "b") (L.Const (-16)))
            $ L.Assign "b" (L.Sub ((L.Add (L.Var "c") (L.Const 3))) (L.Var "c"))
              L.EmptyList)
       $ (L.Sub (L.Add (L.Var "c") (L.Var "a")) (L.Var "w"))
-                       
--- Test to check if the two aproaches give the same results
---trees = [treeT1,treeT2,treeT3,treeT4,treeT5,treeT6,treeT7,treeT8]
---test_same [] = []
---test_same (h:t) = (main' h == (main'' h)) : test_same t
-
--- Test the new block with paths
-test_core = CI.toBlock treeT3
-test_let = LI.toBlock treeL1
-
+      
 -- Tests block processor on Let and Core
-test_letP = LI.doAllThings treeL1
-test_coreP = CI.doAllThings treeT8
-
--- Test apply directions on Let -> "a"
-test_dir_let = LI.dir treeL1 [B.D,B.D,B.R,B.D,B.R,B.D,B.D,B.D,B.D]
-
--- Test apply directions on Core -> "b"
-test_dir_core = CI.dir' treeT8 [B.D,B.D,B.R,B.R,B.D,B.R,B.D]
+test_letP = I.processor_a68 treeL1
+test_coreP = I.processor_io treeT8
 
 -- Test block processor on Let and Core with PP
 test = fromZipper $ I.applyErrors (toZipper treeL1) (test_letP)
