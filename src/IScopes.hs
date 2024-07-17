@@ -232,3 +232,7 @@ block_io a p = errors_io a (mkAG p)
 processor_a68 a = block_a68 (string2Env (initialState a)) (build $ mkAG a)
 
 processor_io a = block_io (string2Env (initialState a)) (build $ mkAG a)
+
+applyErrors_a68 a = fromZipper $ applyErrors (toZipper a) (processor_a68 a)
+
+applyErrors_io a = fromZipper $ applyErrors (toZipper a) (processor_io a)
