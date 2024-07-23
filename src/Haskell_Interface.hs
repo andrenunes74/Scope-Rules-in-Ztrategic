@@ -46,8 +46,12 @@ instance Scopes HsModule where
                     UnQual (HsIdent a) -> setHole (HsVar (UnQual (HsIdent $ a++s))) t
     setDecl t s = case lexeme_HsPVar t of 
                     HsIdent a -> setHole ( HsIdent $ a++s) t  
-    -- initialState = const ["error", "show"]
+    initialState = const ["error", "show"]
 
+
+-- TODO: constructor usage, if inside "data X =" then its decl, else its use. Check "ParseOK" in example2 
+-- TODO: add infix verification (1 `otherFunc` 2)
+-- TODO: processor_io doesnt work properly. We need a different "dcli" for C. It would be best to have different files for a68 and _io
 
 -----
 ----- Quick Test
@@ -81,14 +85,14 @@ parse s = case parseModule s of
 example1_ = putStrLn example1
 example1 = "\
 \module Example where \n\
-\f1 = let x = 1 \n\
-\         y = 2 \n\
+\f1 = let x = 1 `otherFunc` 1 \n\
+\         y = 2 + x \n\
 \         z = x \n\
 \     in z\
 \"
 
-f1 = let x = 1 
-         y = 2 
+f1 = let x = 1 + 1
+         y = 2 + x 
          z = x 
      in z
 
@@ -100,3 +104,20 @@ example2 = "\
 \                ParseOk x -> x \n\
 \                err -> error $ show err\n\
 \"
+
+example3 = "\
+\module Example where \n\
+\f1 = let y = let x = 4 \n\
+\                 y = 7 \n\
+\             in y + z \n\
+\         x = 1 + 1 \n\
+\         z = x \n\
+\     in z\
+\"
+
+f2 = let y = let x = 4 
+                 y = 7 
+             in y + z
+         z = x 
+         x = 1 + 1
+     in z
