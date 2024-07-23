@@ -3,6 +3,7 @@ module Haskell_Interface where
 
 import Language.Haskell.Syntax
 import Language.Haskell.Parser
+import Language.Haskell.Pretty
 
 import Data.Generics.Zipper
 import AGMaker.AGMaker 
@@ -40,26 +41,42 @@ instance Scopes HsModule where
     getDecl t = case constructor t of 
                 CHsPVar -> case lexeme_HsPVar t of 
                     HsIdent s -> s 
+    setUse t s = case lexeme_HsVar t of 
+                    Qual x (HsIdent a) -> setHole (HsVar (Qual x (HsIdent $ a++s))) t
+                    UnQual (HsIdent a) -> setHole (HsVar (UnQual (HsIdent $ a++s))) t
+    setDecl t s = case lexeme_HsPVar t of 
+                    HsIdent a -> setHole ( HsIdent $ a++s) t  
+    -- initialState = const ["error", "show"]
 
 
 -----
+----- Quick Test
 -----
+
+parseExample  = scopesExample example1
+parseExample2 = scopesExample example2
+
+
 -----
+----- Auxiliary
+-----
+scopesExample :: String -> String 
+scopesExample = prettyPrint . applyErrors_a68 . parse 
 
 errorsExample :: String -> Errors
-errorsExample = toErrors . parse
+errorsExample = processor_a68 . parse
 
-runExample :: String -> P
-runExample = toBlock . parse 
+blockExample :: String -> P
+blockExample = toBlock . parse 
 
 parse :: String -> HsModule
 parse s = case parseModule s of 
                 ParseOk x -> x 
                 err -> error $ show err
 
-
-parseExample  = runExample example1
-parseExample2 = runExample example2
+-----
+----- Full example
+-----
 
 example1_ = putStrLn example1
 example1 = "\

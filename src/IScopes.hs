@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module IScopes (Scopes(..),env, block_a68, processor_a68, processor_io ,string2Env, buildChildren, applyErrors, applyDirections, build, toBlock, B.Errors, B.P, S.StrategicData(..)) where
+module IScopes (Scopes(..),env, block_a68, applyErrors_a68, applyErrors_io, processor_a68, processor_io ,string2Env, buildChildren, applyErrors, applyDirections, build, toBlock, B.Errors, B.P, S.StrategicData(..)) where
 import Data.Data ( Data, Typeable )
 import Data.Generics.Zipper
 import Library.Ztrategic
@@ -80,8 +80,9 @@ applyDirections ag (h:t)  | h == B.D = case S.down' ag of
                                         Nothing -> error "Can't go there!"
                                         Just n -> applyDirections n t 
 
-modifyZipperAlongPath :: Scopes a => Zipper a -> B.Directions -> String -> Zipper a
-modifyZipperAlongPath ag d e = modifyFunc (applyDirections ag d) e
+modifyZipperAlongPath :: Scopes a => Zipper a -> (BS.Name, BS.It, String) -> Zipper a
+modifyZipperAlongPath ag (_, B.Use   _ d, e)  = setUse  (applyDirections ag d) e
+modifyZipperAlongPath ag (_, B.Decl  _ d, e)  = setDecl (applyDirections ag d) e
 
 modifyFunc :: Scopes a => Zipper a -> String -> Zipper a
 modifyFunc ag s = case down' ag of 
@@ -111,20 +112,9 @@ getString' ag = case right ag of
                 Just holeString -> holeString
                 Nothing -> getString' n
 
-dirs :: B.Errors -> [(B.Directions,String)] 
-dirs [] = []
-dirs ((_,(B.Use a b), s):t) = (b,s) : dirs t
-dirs ((_,(B.Decl a b), s):t) = (b,s) : dirs t
-
 applyErrors :: Scopes a => Zipper a -> B.Errors -> Zipper a
-applyErrors ag [] = ag
-applyErrors ag e = do
-  let er = dirs e
-  applyErrors' ag er
-
-applyErrors' :: Scopes a => Zipper a -> [(B.Directions,String)] -> Zipper a
-applyErrors' ag [] = ag 
-applyErrors' ag ((a,b): t) = applyErrors' (mkAG $ fromZipper $ (modifyZipperAlongPath ag a b)) t
+applyErrors ag [] = ag 
+applyErrors ag (e: t) = applyErrors (mkAG $ fromZipper $ modifyZipperAlongPath ag e) t
 
 string2Env :: [String] -> B.Env
 string2Env [] = []
