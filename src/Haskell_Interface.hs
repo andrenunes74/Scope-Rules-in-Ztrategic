@@ -50,8 +50,8 @@ instance Scopes HsModule where
 
 
 -- TODO: constructor usage, if inside "data X =" then its decl, else its use. Check "ParseOK" in example2 
+-- ^ use upwards to check if it's inside a "data=" definition
 -- TODO: add infix verification (1 `otherFunc` 2)
--- TODO: processor_io doesnt work properly. We need a different "dcli" for C. It would be best to have different files for a68 and _io
 
 -----
 ----- Quick Test
@@ -118,6 +118,6 @@ example3 = "\
 f2 = let y = let x = 4 
                  y = 7 
              in y + z
-         z = x 
          x = 1 + 1
+         z = x 
      in z

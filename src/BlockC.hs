@@ -50,7 +50,7 @@ lev :: BS.AGTree Int
 lev t =  case BS.constructor t of
             BS.CRoot     ->  0
             BS.CBlock    -> (lev (parent t)) + 1
-            BS.CConsIts  -> lev (parent t)
+            _            -> lev (parent t)
 
 env :: BS.Env -> Zipper BS.P -> BS.Env
 env a t =  case BS.constructor t of
