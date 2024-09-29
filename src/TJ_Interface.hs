@@ -3,6 +3,7 @@
 module TJ_Interface where
 import qualified Block.Shared as B
 import qualified Block.SharedAG as BS
+import qualified BlockA68 as BA
 import qualified IScopes as I 
 import qualified Toy_Java as TJ
 import Data.Data
@@ -70,4 +71,4 @@ globals a d | I.isGlobal a = case (TJ.constructor a) of
             | otherwise = (I.buildChildren globals a d)
 
 --Test block processor for toy_java
-doAllThings a = I.block_a68 ((I.env [] (mkAG $ globals' $ mkAG a))++(I.string2Env (I.initialState a))) (build $ mkAG a)
+doAllThings a = BA.block_a68 ((BA.env [] (mkAG $ globals' $ mkAG a))++(I.string2Env (I.initialState a))) (build $ mkAG a)
