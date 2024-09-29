@@ -36,7 +36,7 @@ instance I.Scopes (C.Item) where
         S.CLet -> True
         _ -> False
     isGlobal ag = False
-    getDecl a = S.lexeme a
+    getDecl a = [S.lexeme a]
     getUse a = S.lexeme a
     initialState ag = ["e"]
 
